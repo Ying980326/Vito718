@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>718分極限挑戰接接樂 (圖片版)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background: #222; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        /* 遊戲區域佈局 */
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 480px; /* 手機直向最理想寬度 */
+            height: 100vh;
+            max-height: 800px;
+            background: #E0F6FF;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        /* 遊戲畫布 */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 資訊欄 (HUD) */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 10;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px #fff;
+            display: flex;
+            justify-content: space-between;
+        }
+        #hp-bar-container { width: 100px; height: 16px; background: #ccc; border-radius: 8px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1px solid #777; }
+        #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
+
+        /* 手機觸控區域 */
+        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 80%; z-index: 5; /* background: rgba(255,0,0,0.1); 除錯用 */ }
+        #left-zone { left: 0; }
+        #right-zone { right: 0; }
+
+        /* 遊戲畫面 */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; text-align: center; padding: 30px; }
+        .screen h1 { font-size: 36px; margin-bottom: 25px; color: #ffe066; }
+        .screen p { font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
+        .screen b { color: #ffbc00; }
+        .screen button { padding: 15px 40px; font-size: 22px; font-weight: bold; background: #4cd137; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
+        .screen button:active { transform: translateY(2px); }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <div id="hud">
+            <div>分數: <span id="score-text">0</span> / 718</div>
+            <div>體力: <div id="hp-bar-container"><div id="hp-bar"></div></div></div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="left-zone" class="touch-zone"></div>
+        <div id="right-zone" class="touch-zone"></div>
+
+        <div id="start-screen" class="screen">
+            <h1>圖片版接接樂</h1>
+            <p><b>【遊戲玩法】</b><br><br>
+               🍎 (item_good.png)：+10 分 / +10 體力<br>
+               🌟 (item_bonus.png)：+30 分<br>
+               💣 (item_bad.png)：-20 分 / -20 體力<br><br>
+               電腦：使用 鍵盤← →移動<br>
+               手機/iPad：點擊螢幕左/右側移動
+            </p>
+            <button onclick="startGame()">開始遊戲</button>
+        </div>
+
+        <div id="end-screen" class="screen hide">
+            <h1 id="end-title">遊戲結束</h1>
+            <p id="end-msg"></p>
+            <button onclick="startGame()">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreText = document.getElementById('score-text');
+        const hpBar = document.getElementById('hp-bar');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const endTitle = document.getElementById('end-title');
+        const endMsg = document.getElementById('end-msg');
+
+        // 設置 Canvas 解析度為固定值，讓它在所有設備上保持一致的邏輯座標
+        const GAME_WIDTH = 480;
+        const GAME_HEIGHT = 800;
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
+
+        // --- 圖片載入 ---
+        let imagesLoaded = 0;
+        const totalImages = 4;
+        function onImageLoad() {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                // 所有圖片載入完成，可以啟用「開始遊戲」按鈕
+                console.log("所有圖片已載入");
+            }
+        }
+
+        const playerImg = new Image();
+        playerImg.src = 'player.png'; // 主要人物
+        playerImg.onload = onImageLoad;
+
+        const itemGoodImg = new Image();
+        itemGoodImg.src = 'item_good.png'; // 補血補分東西
+        itemGoodImg.onload = onImageLoad;
+
+        const itemBonusImg = new Image();
+        itemBonusImg.src = 'item_bonus.png'; // 只加分東西
+        itemBonusImg.onload = onImageLoad;
+
+        const itemBadImg = new Image();
+        itemBadImg.src = 'item_bad.png'; // 扣血扣分東西
+        itemBadImg.onload = onImageLoad;
+
+
+        // 遊戲參數配置
+        let gameActive = false;
+        let score = 0;
+        let hp = 100;
+        let moveDirection = 0; // -1: 左, 1: 右, 0: 靜止
+        let gameLoopId, spawnLoopId;
+
+        // 玩家物件
+        const player = {
+            x: GAME_WIDTH / 2,
+            y: GAME_HEIGHT - 90,
+            width: 70,  // 繪製大小
+            height: 70,
+            speed: 9    // 移動速度
+        };
+
+        // 掉落物品列表
+        let items = [];
+
+        // 物品種類定義
+        const itemTypes = [
+            { img: itemGoodImg, score: 10, hp: 10 },    // 🍎
+            { img: itemBonusImg, score: 30, hp: 0 },   // 🌟
+            { img: itemBadImg, score: -20, hp: -20 }   // 💣
+        ];
+
+        // --- 控制邏輯 (電腦鍵盤) ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveDirection = -1;
+            if (e.key === 'ArrowRight') moveDirection = 1;
+        });
+        window.addEventListener('keyup', (e) => {
+            if ((e.key === 'ArrowLeft' && moveDirection === -1) || 
+                (e.key === 'ArrowRight' && moveDirection === 1)) {
+                moveDirection = 0;
+            }
+        });
+
+        // --- 控制邏輯 (手機/iPad 觸控) ---
+        const leftZone = document.getElementById('left-zone');
+        const rightZone = document.getElementById('right-zone');
+
+        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; });
+        leftZone.addEventListener('touchend', () => moveDirection = 0);
+        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; });
+        rightZone.addEventListener('touchend', () => moveDirection = 0);
+
+        // --- 遊戲核心功能 ---
+        function startGame() {
+            if (imagesLoaded < totalImages) {
+                alert("圖片還沒載入完成，請稍候...");
+                return;
+            }
+
+            // 初始化數據
+            score = 0;
+            hp = 100;
+            player.x = GAME_WIDTH / 2;
+            moveDirection = 0;
+            items = [];
+            
+            scoreText.innerText = score;
+            hpBar.style.width = '100%';
+            
+            startScreen.classList.add('hide');
+            endScreen.classList.add('hide');
+            gameActive = true;
+
+            // 啟動迴圈
+            gameLoopId = requestAnimationFrame(updateGame);
+            spawnLoopId = setInterval(spawnItem, 700); // 物品掉落速度
+        }
+
+        function spawnItem() {
+            if (!gameActive) return;
+
+            // 隨機選擇物品種類
+            const rand = Math.random();
+            let type;
+            if (rand < 0.6) type = itemTypes[0];      // 🍎 (60% 機率)
+            else if (rand < 0.8) type = itemTypes[1]; // 🌟 (20% 機率)
+            else type = itemTypes[2];                 // 💣 (20% 機率)
+
+            // 建立物品數據
+            items.push({
+                img: type.img,
+                score: type.score,
+                hp: type.hp,
+                x: Math.random() * (GAME_WIDTH - 40) + 20, // 隨機水平位置
+                y: -50, // 螢幕上方開始
+                size: 45, // 物品繪製大小
+                speed: Math.random() * 3 + 4 // 隨機下落速度
+            });
+        }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            // --- 邏輯更新 ---
+            
+            // 1. 更新玩家位置
+            if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
+            if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
+
+            // 2. 更新所有掉落物品
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.y += item.speed;
+
+                // --- 碰撞偵測 ---
+                // 使用簡單的 AABB 矩形碰撞偵測
+                if (
+                    item.y + item.size / 2 >= player.y - player.height / 2 &&
+                    item.y - item.size / 2 <= player.y + player.height / 2 &&
+                    item.x + item.size / 2 >= player.x - player.width / 2 &&
+                    item.x - item.size / 2 <= player.x + player.width / 2
+                ) {
+                    // 觸發吃到東西的效果
+                    score += item.score;
+                    hp += item.hp;
+                    
+                    // 確保分數不為負數，體力最高 100
+                    if (score < 0) score = 0;
+                    if (hp > 100) hp = 100;
+
+                    // 更新 UI
+                    scoreText.innerText = score;
+                    hpBar.style.width = `${hp}%`;
+
+                    // 移除物品
+                    items.splice(i, 1);
+
+                    // --- 檢查結束條件 ---
+                    if (score >= 718) {
+                        endGame(true);
+                        return;
+                    }
+                    if (hp <= 0) {
+                        endGame(false);
+                        return;
+                    }
+                    continue;
+                }
+
+                // 物品掉出螢幕底部，自動刪除
+                if (item.y > GAME_HEIGHT) {
+                    items.splice(i, 1);
+                }
+            }
+
+            // --- 繪製更新 ---
+            drawGame();
+
+            // 繼續下一幀
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function drawGame() {
+            // 清空畫布
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // 繪製背景 (可以改為繪製圖片)
+            ctx.fillStyle = '#E0F6FF';
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // 繪製玩家主要人物 (居中繪製)
+            ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+
+            // 繪製所有掉落物品
+            for (const item of items) {
+                ctx.drawImage(item.img, item.x - item.size / 2, item.y - item.size / 2, item.size, item.size);
+            }
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            clearInterval(spawnLoopId);
+
+            if (isWin) {
+                endTitle.innerText = "🎉 恭喜通關！";
+                endTitle.style.color = "#4cd137";
+                endMsg.innerHTML = `你成功達到了 <b>${score}
