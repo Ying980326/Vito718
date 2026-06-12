@@ -52,13 +52,13 @@
         <div id="left-zone" class="touch-zone"></div>
         <div id="right-zone" class="touch-zone"></div>
 
-        <!-- 🛠️ 開頭畫面與文案更新 -->
+        <!-- 遊戲玩法說明更新 -->
         <div id="start-screen" class="screen">
-            <h1>糊塗麵最好吃</h1> <!-- 👈 修改標題 -->
-            <p><b>【遊戲玩法】</b><br><br>
-               🍜 糊塗麵：補分補血（+10 分 / +5 體力）<br> <!-- 👈 修改名稱 -->
-               🥩 炸排骨：純補分（+30 分）<br> <!-- 👈 修改名稱 -->
-               🦵 護膝：大扣血扣分（-10 分 / -20 體力）<br><br>
+            <h1>糊塗麵最好吃</h1>
+            <p><b>【速戰速決新規則】</b><br><br>
+               🍜 糊塗麵：大補分補血（<b>+20 分 / +5 體力</b>）<br>
+               🥩 炸排骨：<b>超級搶分（+71 分）</b><br>
+               🦵 護膝：<b>超級地雷（-50 分 / -20 體力）</b><br><br>
                ⚠️ <b>生存警告：體力每秒會自動減少 2 點！</b><br><br>
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
                手機：點擊螢幕 左半邊 或 右半邊 移動
@@ -115,7 +115,7 @@
             y: GAME_HEIGHT - 120, 
             width: 145, 
             height: 145, 
-            speed: 13 
+            speed: 15 // 配合快節奏，主角移動速度稍微調快一點
         };
 
         const playerImg = new Image();
@@ -190,7 +190,9 @@
             if (timeBurnLoopId) clearInterval(timeBurnLoopId); 
 
             gameLoopId = requestAnimationFrame(updateGame);
-            spawnLoopId = setInterval(spawnItem, 750); 
+            
+            // 🛠️ 縮短掉落時間間隔：從原本的 750毫秒 縮短到 450毫秒，下落更密集！
+            spawnLoopId = setInterval(spawnItem, 450); 
             
             timeBurnLoopId = setInterval(() => {
                 if (!gameActive) return;
@@ -212,9 +214,10 @@
             if (rand >= 0.55 && rand < 0.75) itemTypeIndex = 1; 
             else if (rand >= 0.75) itemTypeIndex = 2; 
 
-            let scoreVal = 10, hpVal = 5, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
-            if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
-            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -20; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
+            // 🛠️ 爽快版數值平衡核心修改
+            let scoreVal = 20, hpVal = 5, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle; // 👈 糊塗麵 +20 分
+            if (itemTypeIndex === 1) { scoreVal = 71; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; } // 👈 炸排骨 +71 分
+            if (itemTypeIndex === 2) { scoreVal = -50; hpVal = -20; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; } // 👈 護膝 -50 分
 
             let itemW = 95; 
             let itemH = 95; 
@@ -235,7 +238,8 @@
                 y: -100,
                 width: itemW,
                 height: itemH,
-                speed: Math.random() * 3 + 4.5 
+                // 🛠️ 提高掉落物速度：基礎速度和隨機加成全面調高，下落更有重力感
+                speed: Math.random() * 4 + 6 
             });
         }
 
