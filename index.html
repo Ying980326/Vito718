@@ -72,7 +72,7 @@
         canvas.height = GAME_HEIGHT;
 
         // ==========================================
-        // 📢 ImgBB 專屬直連網址
+        // 📢 自動對應你的 GitHub 正確網址
         // ==========================================
         const PLAYER_IMG_URL   = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/man.png';
         const ITEM_NOODLE_URL  = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/noodle.png';
@@ -82,22 +82,19 @@
 
         let imgStatus = { player: false, noodle: false, ribs: false, kneepad: false };
 
-        // 玩家物件基礎屬性
         const player = {
             x: GAME_WIDTH / 2,
             y: GAME_HEIGHT - 90,
-            width: 85,   // 預設寬度基準
-            height: 85,  // 預設高度基準
+            width: 90,   
+            height: 90,  
             speed: 10
         };
 
-        // 圖片載入並自動調整主角比例
         const playerImg = new Image();
         playerImg.crossOrigin = 'anonymous';
         playerImg.src = PLAYER_IMG_URL;
         playerImg.onload = () => {
             imgStatus.player = true;
-            // 依原圖比例調整，將寬度固定為 90 像素，高度依比例縮放
             const baseWidth = 90;
             const scale = baseWidth / playerImg.width;
             player.width = baseWidth;
@@ -119,7 +116,6 @@
         itemKneepadImg.src = ITEM_KNEEPAD_URL;
         itemKneepadImg.onload = () => imgStatus.kneepad = true;
 
-        // 遊戲核心數據
         let gameActive = false;
         let score = 0;
         let hp = 100;
@@ -143,7 +139,6 @@
         rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; });
         rightZone.addEventListener('touchend', () => moveDirection = 0);
 
-        // --- 遊戲運行 ---
         function startGame() {
             score = 0;
             hp = 100;
@@ -177,11 +172,10 @@
             if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
             if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
 
-            // 計算掉落物的等比例寬高
-            let itemW = 50;
-            let itemH = 50;
+            let itemW = 55;
+            let itemH = 55;
             if (isLoaded && imgObj.width > 0) {
-                const baseSize = 50; // 掉落物基準寬度
+                const baseSize = 55;
                 const scale = baseSize / imgObj.width;
                 itemW = baseSize;
                 itemH = imgObj.height * scale;
@@ -211,7 +205,6 @@
                 const item = items[i];
                 item.y += item.speed;
 
-                // 修正為精準的等比例矩形碰撞偵測
                 if (
                     item.y + item.height / 2 >= player.y - player.height / 2 &&
                     item.y - item.height / 2 <= player.y + player.height / 2 &&
@@ -242,34 +235,45 @@
         }
 
         function drawGame() {
-            // 每幀開頭徹底清除畫布，完美解決去背圖疊加產生黑框的問題
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 重新繪製乾淨的背景
             ctx.fillStyle = '#E0F6FF';
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 繪製等比例主角
+            // 🛠️ 【核心修正】開啟全網頁最強「黑底濾除模式」
+            // 讓圖片中的黑色自動與背景融合，達到免去背效果！
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen'; 
+            
+            // 繪製主角
             if (imgStatus.player) {
                 ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
             } else {
+                ctx.restore(); // 暫時退出濾鏡畫文字
                 ctx.font = `80px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('🐱', player.x, player.y);
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
             }
 
-            // 繪製等比例掉落物
+            // 繪製掉落物
             for (const item of items) {
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
+                    ctx.restore(); // 暫時退出濾鏡畫文字
                     ctx.font = `45px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(item.emoji, item.x, item.y);
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'screen';
                 }
             }
+            
+            ctx.restore(); // 結束繪製，還原畫布設定
         }
 
         function endGame(isWin) {
