@@ -13,12 +13,10 @@
         
         #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; align-items: center; }
         
-        /* 🛠️ 體力條容器稍微加寬，容納數字 */
         #hp-container-wrapper { display: flex; align-items: center; }
         #hp-bar-container { position: relative; width: 120px; height: 22px; background: #ccc; border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
         
-        /* 🛠️ 體力條數字顯示：置中展現 */
         #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 13px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
         
         .touch-zone { position: absolute; bottom: 0; width: 50%; height: 60%; z-index: 5; }
@@ -44,7 +42,8 @@
                 體力: 
                 <div id="hp-bar-container">
                     <div id="hp-bar"></div>
-                    <div id="hp-text">100 / 100</div> </div>
+                    <div id="hp-text">100 / 100</div>
+                </div>
             </div>
         </div>
 
@@ -56,9 +55,9 @@
         <div id="start-screen" class="screen">
             <h1>挑戰 718 分！</h1>
             <p><b>【遊戲玩法】</b><br><br>
-               🍜 麵：補血補分（+10 分 / +10 體力）<br>
+               🍜 麵：補分補血（<b>+10 分 / +5 體力</b>）<br>
                🥩 排骨：純補分（+30 分）<br>
-               🦵 護膝：扣血扣分（-10 分 / -10 體力）<br><br>
+               🦵 護膝：大扣血扣分（<b>-10 分 / -20 體力</b>）<br><br>
                ⚠️ <b>生存警告：體力每秒會自動減少 2 點！</b><br><br>
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
                手機：點擊螢幕 左半邊 或 右半邊 移動
@@ -78,7 +77,7 @@
         const ctx = canvas.getContext('2d');
         const scoreText = document.getElementById('score-text');
         const hpBar = document.getElementById('hp-bar');
-        const hpText = document.getElementById('hp-text'); // 🛠️ 取得體力文字標籤
+        const hpText = document.getElementById('hp-text');
         const startScreen = document.getElementById('start-screen');
         const endScreen = document.getElementById('end-screen');
         const endTitle = document.getElementById('end-title');
@@ -104,13 +103,12 @@
 
         let imgStatus = { player: false, noodle: false, ribs: false, kneepad: false };
 
-        // 🛠️ 主角尺寸有感再放大（從 120 升級到 145 巨大化！）
         const player = { 
             x: GAME_WIDTH / 2, 
             y: GAME_HEIGHT - 120, 
             width: 145, 
             height: 145, 
-            speed: 13 // 體積變大，速度調快讓手感不笨重
+            speed: 13 
         };
 
         const playerImg = new Image();
@@ -143,7 +141,7 @@
         let score = 0;
         let hp = 100;
         let moveDirection = 0;
-        let gameLoopId, spawnLoopId, timeBurnLoopId; // 🛠️ 新增時間倒數計時器
+        let gameLoopId, spawnLoopId, timeBurnLoopId; 
         let items = [];
 
         startBtn.addEventListener('click', startGame);
@@ -174,7 +172,7 @@
             
             scoreText.innerText = score;
             hpBar.style.width = '100%';
-            hpText.innerText = '100 / 100'; // 🛠️ 初始化體力數值
+            hpText.innerText = '100 / 100'; 
             
             startScreen.classList.add('hide');
             endScreen.classList.add('hide');
@@ -182,21 +180,20 @@
 
             if (gameLoopId) cancelAnimationFrame(gameLoopId);
             if (spawnLoopId) clearInterval(spawnLoopId);
-            if (timeBurnLoopId) clearInterval(timeBurnLoopId); // 🛠️ 清除舊的時間計時器
+            if (timeBurnLoopId) clearInterval(timeBurnLoopId); 
 
             gameLoopId = requestAnimationFrame(updateGame);
             spawnLoopId = setInterval(spawnItem, 750); 
             
-            // 🛠️ 【時間沙漏核心】：每 1 秒（1000毫秒）自動扣除 2 滴血
             timeBurnLoopId = setInterval(() => {
                 if (!gameActive) return;
-                hp -= 2; // 每秒扣 2 血
+                hp -= 2; 
                 if (hp <= 0) {
                     hp = 0;
-                    endGame(false); // 體力扣光直接死亡
+                    endGame(false); 
                 }
                 hpBar.style.width = `${hp}%`;
-                hpText.innerText = `${hp} / 100`; // 更新文字顯示
+                hpText.innerText = `${hp} / 100`; 
             }, 1000);
         }
 
@@ -208,11 +205,11 @@
             if (rand >= 0.55 && rand < 0.75) itemTypeIndex = 1; 
             else if (rand >= 0.75) itemTypeIndex = 2; 
 
-            let scoreVal = 10, hpVal = 10, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
+            // 🛠️ 數值微調修正處
+            let scoreVal = 10, hpVal = 5, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle; // 👈 麵改成 +5 體力
             if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
-            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
+            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -20; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; } // 👈 護膝改成 -20 體力
 
-            // 🛠️ 掉落物尺寸同步放大（從 75 暴增到 95 巨大化！）
             let itemW = 95; 
             let itemH = 95; 
             if (isLoaded && imgObj.width > 0) {
@@ -228,7 +225,6 @@
                 emoji: emoji,
                 score: scoreVal,
                 hp: hpVal,
-                // 調整邊界，避免巨大掉落物塞出牆壁
                 x: Math.random() * (GAME_WIDTH - 110) + 55, 
                 y: -100,
                 width: itemW,
@@ -262,7 +258,7 @@
 
                     scoreText.innerText = score;
                     hpBar.style.width = `${hp}%`;
-                    hpText.innerText = `${hp} / 100`; // 🛠️ 接到東西時同步更新體力數字
+                    hpText.innerText = `${hp} / 100`; 
 
                     items.splice(i, 1);
 
@@ -309,7 +305,7 @@
             gameActive = false;
             cancelAnimationFrame(gameLoopId);
             clearInterval(spawnLoopId);
-            clearInterval(timeBurnLoopId); // 🛠️ 結束時停止扣血計時器
+            clearInterval(timeBurnLoopId); 
 
             if (isWin) {
                 endTitle.innerText = "🎉 恭喜通關！";
