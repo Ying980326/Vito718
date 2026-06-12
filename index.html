@@ -72,7 +72,7 @@
         canvas.height = GAME_HEIGHT;
 
         // ==========================================
-        // 📢 GitHub 專屬直連網址
+        // 📢 GitHub 專屬直連網址 (標準純淨版)
         // ==========================================
         const PLAYER_IMG_URL   = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/man.png';
         const ITEM_NOODLE_URL  = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/noodle.png';
@@ -80,63 +80,36 @@
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
         // ==========================================
 
-        // 儲存動態去背後的離屏 Canvas 畫布物件
-        let processedImages = { player: null, noodle: null, ribs: null, kneepad: null };
         let imgStatus = { player: false, noodle: false, ribs: false, kneepad: false };
 
         const player = { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 90, width: 90, height: 90, speed: 10 };
 
-        // 🧠 【核心魔法：魔術棒動態去背函式】
-        // 載入圖片後，自動把圖片中的「純黑色」變成透明，其餘顏色保持 100% 飽和度
-        function processImageToRemoveBlack(imgSrcUrl, key, callback) {
-            const tempImg = new Image();
-            tempImg.crossOrigin = 'anonymous';
-            tempImg.src = imgSrcUrl;
-            tempImg.onload = () => {
-                const offCanvas = document.createElement('canvas');
-                const offCtx = offCanvas.getContext('2d');
-                offCanvas.width = tempImg.width;
-                offCanvas.height = tempImg.height;
-                
-                // 先把原圖畫在隱藏的畫布上
-                offCtx.drawImage(tempImg, 0, 0);
-                
-                try {
-                    const imgData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
-                    const data = imgData.data;
-                    
-                    // 檢查每一個像素，如果是黑色(RGB接近0)就將透明度A設為0
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i+1];
-                        const b = data[i+2];
-                        // 容許度稍微調寬一點，防止黑邊殘留
-                        if (r < 35 && g < 35 && b < 35) {
-                            data[i+3] = 0; // 變成完全透明
-                        }
-                    }
-                    offCtx.putImageData(imgData, 0, 0);
-                    processedImages[key] = offCanvas;
-                    imgStatus[key] = true;
-                } catch (e) {
-                    // 如果跨域失敗，則保留原圖當作備份
-                    processedImages[key] = tempImg;
-                    imgStatus[key] = true;
-                }
-                if (callback) callback(tempImg);
-            };
-        }
-
-        // 開始處理四張圖
-        processImageToRemoveBlack(PLAYER_IMG_URL, 'player', (img) => {
+        // 使用最標準的載入方式，確保色彩 100% 呈現
+        const playerImg = new Image();
+        playerImg.crossOrigin = 'anonymous';
+        playerImg.src = PLAYER_IMG_URL;
+        playerImg.onload = () => {
+            imgStatus.player = true;
             const baseWidth = 90;
-            const scale = baseWidth / img.width;
+            const scale = baseWidth / playerImg.width;
             player.width = baseWidth;
-            player.height = img.height * scale;
-        });
-        processImageToRemoveBlack(ITEM_NOODLE_URL, 'noodle');
-        processImageToRemoveBlack(ITEM_RIBS_URL, 'ribs');
-        processImageToRemoveBlack(ITEM_KNEEPAD_URL, 'kneepad');
+            player.height = playerImg.height * scale;
+        };
+
+        const itemNoodleImg = new Image();
+        itemNoodleImg.crossOrigin = 'anonymous';
+        itemNoodleImg.src = ITEM_NOODLE_URL;
+        itemNoodleImg.onload = () => imgStatus.noodle = true;
+
+        const itemRibsImg = new Image();
+        itemRibsImg.crossOrigin = 'anonymous';
+        itemRibsImg.src = ITEM_RIBS_URL;
+        itemRibsImg.onload = () => imgStatus.ribs = true;
+
+        const itemKneepadImg = new Image();
+        itemKneepadImg.crossOrigin = 'anonymous';
+        itemKneepadImg.src = ITEM_KNEEPAD_URL;
+        itemKneepadImg.onload = () => imgStatus.kneepad = true;
 
         let gameActive = false;
         let score = 0;
@@ -190,14 +163,13 @@
             if (rand >= 0.55 && rand < 0.75) itemTypeIndex = 1; 
             else if (rand >= 0.75) itemTypeIndex = 2; 
 
-            let scoreVal = 10, hpVal = 10, emoji = '🍜', keyStr = 'noodle';
-            if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; keyStr = 'ribs'; }
-            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; keyStr = 'kneepad'; }
+            let scoreVal = 10, hpVal = 10, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
+            if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
+            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
 
             let itemW = 55;
             let itemH = 55;
-            const imgObj = processedImages[keyStr];
-            if (imgStatus[keyStr] && imgObj && imgObj.width > 0) {
+            if (isLoaded && imgObj.width > 0) {
                 const baseSize = 55;
                 const scale = baseSize / imgObj.width;
                 itemW = baseSize;
@@ -205,7 +177,8 @@
             }
 
             items.push({
-                key: keyStr,
+                img: imgObj,
+                isLoaded: isLoaded,
                 emoji: emoji,
                 score: scoreVal,
                 hp: hpVal,
@@ -262,9 +235,9 @@
             ctx.fillStyle = '#E0F6FF';
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 繪製主角（顏色 100% 飽和，不發淡）
-            if (imgStatus.player && processedImages.player) {
-                ctx.drawImage(processedImages.player, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+            // 繪製主角：標準無濾鏡
+            if (imgStatus.player) {
+                ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
             } else {
                 ctx.font = `80px Arial`;
                 ctx.textAlign = 'center';
@@ -272,10 +245,10 @@
                 ctx.fillText('🐱', player.x, player.y);
             }
 
-            // 繪製掉落物（顏色 100% 飽和，不發淡）
+            // 繪製掉落物：標準無濾鏡
             for (const item of items) {
-                if (imgStatus[item.key] && processedImages[item.key]) {
-                    ctx.drawImage(processedImages[item.key], item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
+                if (item.isLoaded) {
+                    ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
                     ctx.font = `45px Arial`;
                     ctx.textAlign = 'center';
