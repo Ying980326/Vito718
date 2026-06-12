@@ -9,21 +9,26 @@
         body { background: #222; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-wrapper { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 800px; background: #E0F6FF; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
         
-        /* 💡 關鍵：固定外在顯示大小為 100% */
         canvas { display: block; width: 100%; height: 100%; image-rendering: -webkit-optimize-contrast; image-rendering: auto; }
         
         #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; }
         #hp-bar-container { width: 100px; height: 16px; background: #ccc; border-radius: 8px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1px solid #777; }
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
-        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 80%; z-index: 5; }
+        
+        /* 🛠️ 修正觸控區：高度縮小至 60%，且 z-index 降低，絕對不擋按鈕 */
+        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 60%; z-index: 5; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; text-align: center; padding: 30px; }
+        
+        /* 🛠️ 提升選單畫面圖層：z-index 提到最高的 30，確保按鈕能被點擊 */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 30px; }
         .screen h1 { font-size: 36px; margin-bottom: 25px; color: #ffe066; }
         .screen p { font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
         .screen b { color: #ffbc00; }
-        .screen button { padding: 15px 40px; font-size: 22px; font-weight: bold; background: #4cd137; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
-        .screen button:active { transform: translateY(2px); }
+        
+        /* 確保按鈕本身可以接收點擊事件 */
+        .screen button { position: relative; z-index: 35; padding: 15px 40px; font-size: 22px; font-weight: bold; background: #4cd137; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); -webkit-tap-highlight-color: transparent; }
+        .screen button:active { transform: translateY(2px); background: #44bd32; }
         .hide { display: none !important; }
     </style>
 </head>
@@ -49,13 +54,13 @@
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
                手機/iPad：點擊螢幕 左半邊 或 右半邊 移動
             </p>
-            <button id="start-btn" onclick="startGame()">開始遊戲</button>
+            <button id="start-btn">開始遊戲</button>
         </div>
 
         <div id="end-screen" class="screen hide">
             <h1 id="end-title">遊戲結束</h1>
             <p id="end-msg"></p>
-            <button onclick="startGame()">再玩一次</button>
+            <button id="restart-btn">再玩一次</button>
         </div>
     </div>
 
@@ -68,16 +73,15 @@
         const endScreen = document.getElementById('end-screen');
         const endTitle = document.getElementById('end-title');
         const endMsg = document.getElementById('end-msg');
+        const startBtn = document.getElementById('start-btn');
 
-        // 邏輯上的遊戲尺寸
         const GAME_WIDTH = 480;
         const GAME_HEIGHT = 800;
 
-        // 🛠️ 【核心高清修正】將畫布內在解析度乘以 2 倍，解決手機像素化模糊問題
+        // 高清渲染設定
         const DPR = window.devicePixelRatio || 2; 
         canvas.width = GAME_WIDTH * DPR;
         canvas.height = GAME_HEIGHT * DPR;
-        // 強制縮放畫布上下文，讓後續所有的繪圖邏輯自動適應高解析度
         ctx.scale(DPR, DPR);
 
         // ==========================================
@@ -96,9 +100,201 @@
             y: GAME_HEIGHT - 110, 
             width: 120, 
             height: 120, 
-            speed: 11 
+            speed: 12 
         };
 
         const playerImg = new Image();
         playerImg.crossOrigin = 'anonymous';
         playerImg.src = PLAYER_IMG_URL;
+        playerImg.onload = () => {
+            imgStatus.player = true;
+            const baseWidth = 120; 
+            const scale = baseWidth / playerImg.width;
+            player.width = baseWidth;
+            player.height = playerImg.height * scale;
+        };
+
+        const itemNoodleImg = new Image();
+        itemNoodleImg.crossOrigin = 'anonymous';
+        itemNoodleImg.src = ITEM_NOODLE_URL;
+        itemNoodleImg.onload = () => imgStatus.noodle = true;
+
+        const itemRibsImg = new Image();
+        itemRibsImg.crossOrigin = 'anonymous';
+        itemRibsImg.src = ITEM_RIBS_URL;
+        itemRibsImg.onload = () => imgStatus.ribs = true;
+
+        const itemKneepadImg = new Image();
+        itemKneepadImg.crossOrigin = 'anonymous';
+        itemKneepadImg.src = ITEM_KNEEPAD_URL;
+        itemKneepadImg.onload = () => imgStatus.kneepad = true;
+
+        let gameActive = false;
+        let score = 0;
+        let hp = 100;
+        let moveDirection = 0;
+        let gameLoopId, spawnLoopId;
+        let items = [];
+
+        // 🛠️ 用更精準的綁定方式處理按鈕點擊，徹底解決手機不反應問題
+        startBtn.addEventListener('click', startGame);
+        document.getElementById('restart-btn').addEventListener('click', startGame);
+
+        // --- 控制偵聽 ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveDirection = -1;
+            if (e.key === 'ArrowRight') moveDirection = 1;
+        });
+        window.addEventListener('keyup', (e) => {
+            if ((e.key === 'ArrowLeft' && moveDirection === -1) || (e.key === 'ArrowRight' && moveDirection === 1)) moveDirection = 0;
+        });
+
+        const leftZone = document.getElementById('left-zone');
+        const rightZone = document.getElementById('right-zone');
+        
+        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; });
+        leftZone.addEventListener('touchend', () => moveDirection = 0);
+        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; });
+        rightZone.addEventListener('touchend', () => moveDirection = 0);
+
+        function startGame() {
+            score = 0;
+            hp = 100;
+            player.x = GAME_WIDTH / 2;
+            moveDirection = 0;
+            items = [];
+            
+            scoreText.innerText = score;
+            hpBar.style.width = '100%';
+            
+            startScreen.classList.add('hide');
+            endScreen.classList.add('hide');
+            gameActive = true;
+
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            if (spawnLoopId) clearInterval(spawnLoopId);
+
+            gameLoopId = requestAnimationFrame(updateGame);
+            spawnLoopId = setInterval(spawnItem, 750); 
+        }
+
+        function spawnItem() {
+            if (!gameActive) return;
+
+            const rand = Math.random();
+            let itemTypeIndex = 0; 
+            if (rand >= 0.55 && rand < 0.75) itemTypeIndex = 1; 
+            else if (rand >= 0.75) itemTypeIndex = 2; 
+
+            let scoreVal = 10, hpVal = 10, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
+            if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
+            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
+
+            let itemW = 75; 
+            let itemH = 75; 
+            if (isLoaded && imgObj.width > 0) {
+                const baseSize = 75; 
+                const scale = baseSize / imgObj.width;
+                itemW = baseSize;
+                itemH = imgObj.height * scale;
+            }
+
+            items.push({
+                img: imgObj,
+                isLoaded: isLoaded,
+                emoji: emoji,
+                score: scoreVal,
+                hp: hpVal,
+                x: Math.random() * (GAME_WIDTH - 90) + 45, 
+                y: -80,
+                width: itemW,
+                height: itemH,
+                speed: Math.random() * 3 + 4.5 
+            });
+        }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
+            if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.y += item.speed;
+
+                if (
+                    item.y + item.height / 2 >= player.y - player.height / 2 &&
+                    item.y - item.height / 2 <= player.y + player.height / 2 &&
+                    item.x + item.width / 2 >= player.x - player.width / 2 &&
+                    item.x - item.width / 2 <= player.x + player.width / 2
+                ) {
+                    score += item.score;
+                    hp += item.hp;
+                    
+                    if (score < 0) score = 0;
+                    if (hp > 100) hp = 100;
+
+                    scoreText.innerText = score;
+                    hpBar.style.width = `${hp}%`;
+
+                    items.splice(i, 1);
+
+                    if (score >= 718) { endGame(true); return; }
+                    if (hp <= 0) { endGame(false); return; }
+                    continue;
+                }
+
+                if (item.y > GAME_HEIGHT) { items.splice(i, 1); }
+            }
+
+            drawGame();
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            ctx.fillStyle = '#E0F6FF';
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            if (imgStatus.player) {
+                ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+            } else {
+                ctx.font = `110px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🐱', player.x, player.y);
+            }
+
+            for (const item of items) {
+                if (item.isLoaded) {
+                    ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
+                } else {
+                    ctx.font = `65px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(item.emoji, item.x, item.y);
+                }
+            }
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            clearInterval(spawnLoopId);
+
+            if (isWin) {
+                endTitle.innerText = "🎉 恭喜通關！";
+                endTitle.style.color = "#4cd137";
+                endMsg.innerHTML = `你成功達到了 <b>${score}</b> 分！<br>挑戰 718 成功！`;
+            } else {
+                endTitle.innerText = "💀 遊戲結束";
+                endTitle.style.color = "#ff4d4d";
+                endMsg.innerHTML = `體力耗盡了...<br>最終得分：<b>${score}</b> 分。`;
+            }
+            endScreen.classList.remove('hide');
+        }
+    </script>
+</body>
+</html>
