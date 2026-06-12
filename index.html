@@ -3,54 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>糊塗麵挑戰！</title>
+    <title>718分極限挑戰接接樂</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #222; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        
-        /* 遊戲區域佈局 */
-        #game-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            max-height: 800px;
-            background: #E0F6FF;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        }
-
-        /* 遊戲畫布 */
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* 資訊欄 (HUD) */
-        #hud {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
-            z-index: 10;
-            color: #333;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 1px 1px 1px #fff;
-            display: flex;
-            justify-content: space-between;
-        }
+        #game-wrapper { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 800px; background: #E0F6FF; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        canvas { display: block; width: 100%; height: 100%; }
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; }
         #hp-bar-container { width: 100px; height: 16px; background: #ccc; border-radius: 8px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1px solid #777; }
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
-
-        /* 手機觸控區域 */
         .touch-zone { position: absolute; bottom: 0; width: 50%; height: 80%; z-index: 5; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
-
-        /* 遊戲畫面 */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; text-align: center; padding: 30px; }
         .screen h1 { font-size: 36px; margin-bottom: 25px; color: #ffe066; }
         .screen p { font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
@@ -76,13 +40,13 @@
         <div id="start-screen" class="screen">
             <h1>挑戰 718 分！</h1>
             <p><b>【遊戲玩法】</b><br><br>
-               🍜 麵：補血補分（+10 分 / +10 體力）<br>
-               🥩 排骨：純補分（+30 分）<br>
+               🍜 糊塗麵：補血補分（+10 分 / +10 體力）<br>
+               🥩 炸排骨：純補分（+30 分）<br>
                🦵 護膝：扣血扣分（-10 分 / -10 體力）<br><br>
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
                手機/iPad：點擊螢幕 左半邊 或 右半邊 移動
             </p>
-            <button onclick="startGame()">開始遊戲</button>
+            <button id="start-btn" onclick="startGame()">開始遊戲</button>
         </div>
 
         <div id="end-screen" class="screen hide">
@@ -102,103 +66,78 @@
         const endTitle = document.getElementById('end-title');
         const endMsg = document.getElementById('end-msg');
 
-        // 設置 Canvas 固定解析度
         const GAME_WIDTH = 480;
         const GAME_HEIGHT = 800;
         canvas.width = GAME_WIDTH;
         canvas.height = GAME_HEIGHT;
 
         // ==========================================
-        // 📢 【 填入你的 GOOGLE DRIVE 直連網址區 】
+        // 📢 【 網址已幫你完美填入完成！ 】
         // ==========================================
-        const PLAYER_IMG_URL   = 'https://ibb.co/fYdbSTSG';
-        const ITEM_NOODLE_URL  = 'https://ibb.co/F41PXy3P';
-        const ITEM_RIBS_URL    = 'https://ibb.co/BKf14n6g';
-        const ITEM_KNEEPAD_URL = 'https://ibb.co/ycmt3GKg';
+        const PLAYER_IMG_URL   = 'https://i.ibb.co/fYdbSTSG/image.png';
+        const ITEM_NOODLE_URL  = 'https://i.ibb.co/BKf14n6g/image.png';
+        const ITEM_RIBS_URL    = 'https://i.ibb.co/F41PXy3P/image.png';
+        const ITEM_KNEEPAD_URL = 'https://i.ibb.co/ycmt3GKg/image.png';
         // ==========================================
 
-        // --- 圖片加載與初始化 ---
-        let imagesLoaded = 0;
-        const totalImages = 4;
-        function onImageLoad() {
-            imagesLoaded++;
-        }
+        let imgStatus = { player: false, noodle: false, ribs: false, kneepad: false };
 
+        // 加上跨域認證，確保 ImgBB 的圖片可以順利在畫布上渲染
         const playerImg = new Image();
+        playerImg.crossOrigin = 'anonymous';
         playerImg.src = PLAYER_IMG_URL;
-        playerImg.onload = onImageLoad;
+        playerImg.onload = () => imgStatus.player = true;
 
         const itemNoodleImg = new Image();
+        itemNoodleImg.crossOrigin = 'anonymous';
         itemNoodleImg.src = ITEM_NOODLE_URL;
-        itemNoodleImg.onload = onImageLoad;
+        itemNoodleImg.onload = () => imgStatus.noodle = true;
 
         const itemRibsImg = new Image();
+        itemRibsImg.crossOrigin = 'anonymous';
         itemRibsImg.src = ITEM_RIBS_URL;
-        itemRibsImg.onload = onImageLoad;
+        itemRibsImg.onload = () => imgStatus.ribs = true;
 
         const itemKneepadImg = new Image();
+        itemKneepadImg.crossOrigin = 'anonymous';
         itemKneepadImg.src = ITEM_KNEEPAD_URL;
-        itemKneepadImg.onload = onImageLoad;
-
+        itemKneepadImg.onload = () => imgStatus.kneepad = true;
 
         // 遊戲核心數據
         let gameActive = false;
         let score = 0;
         let hp = 100;
-        let moveDirection = 0; // -1: 左, 1: 右, 0: 靜止
+        let moveDirection = 0;
         let gameLoopId, spawnLoopId;
 
-        // ==========================================
-        // 🛠️ 【 專屬主要人物 尺寸與速度調整區 】
-        // ==========================================
         const player = {
             x: GAME_WIDTH / 2,
             y: GAME_HEIGHT - 90,
-            width: 80,   // 👈 如果你覺得你的人物看起來太小，可以把數值調大（例如：100）
-            height: 80,  // 👈 如果你覺得你的人物看起來太小，可以把數值調大（例如：100）
-            speed: 9.5   // 👈 如果覺得人物移動太慢，可以調高（例如：12）或調低
+            width: 85,   // 👈 如果圖片太大/太小，可以微調這個數值
+            height: 85,  // 👈 如果圖片太大/太小，可以微調這個數值
+            speed: 9.5   
         };
-        // ==========================================
 
-        // 掉落物列表
         let items = [];
 
-        // 物品種類屬性定義
-        const itemTypes = [
-            { img: itemNoodleImg, score: 10, hp: 10 },    // 麵 (+10分, +10體力)
-            { img: itemRibsImg, score: 30, hp: 0 },       // 排骨 (+30分, +0體力)
-            { img: itemKneepadImg, score: -10, hp: -10 }  // 護膝 (-10分, -10體力)
-        ];
-
-        // --- 鍵盤操作控制 (電腦) ---
+        // --- 控制偵聽 ---
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') moveDirection = -1;
             if (e.key === 'ArrowRight') moveDirection = 1;
         });
         window.addEventListener('keyup', (e) => {
-            if ((e.key === 'ArrowLeft' && moveDirection === -1) || 
-                (e.key === 'ArrowRight' && moveDirection === 1)) {
-                moveDirection = 0;
-            }
+            if ((e.key === 'ArrowLeft' && moveDirection === -1) || (e.key === 'ArrowRight' && moveDirection === 1)) moveDirection = 0;
         });
 
-        // --- 觸控操作控制 (手機 / iPad) ---
         const leftZone = document.getElementById('left-zone');
         const rightZone = document.getElementById('right-zone');
-
         leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; });
         leftZone.addEventListener('touchend', () => moveDirection = 0);
         rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; });
         rightZone.addEventListener('touchend', () => moveDirection = 0);
 
-        // --- 遊戲運作邏輯 ---
+        // --- 遊戲運行 ---
         function startGame() {
-            if (imagesLoaded < totalImages) {
-                alert("圖片正在努力載入中，請確認 Google Drive 網址轉換是否正確，且皆有開啟『知道連結的任何人』權限喔！");
-                return;
-            }
-
-            // 數據歸零重設
             score = 0;
             hp = 100;
             player.x = GAME_WIDTH / 2;
@@ -212,12 +151,122 @@
             endScreen.classList.add('hide');
             gameActive = true;
 
-            // 啟動動畫與掉落計時器
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            if (spawnLoopId) clearInterval(spawnLoopId);
+
             gameLoopId = requestAnimationFrame(updateGame);
-            spawnLoopId = setInterval(spawnItem, 750); // 每 0.75 秒生成一個物品
+            spawnLoopId = setInterval(spawnItem, 750); 
         }
 
         function spawnItem() {
             if (!gameActive) return;
 
-            // 隨機決定掉落物品種類機率 (麵：55% / 排骨：20%
+            const rand = Math.random();
+            let itemTypeIndex = 0; 
+            if (rand >= 0.55 && rand < 0.75) itemTypeIndex = 1; 
+            else if (rand >= 0.75) itemTypeIndex = 2; 
+
+            let scoreVal = 10, hpVal = 10, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
+            if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
+            if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
+
+            items.push({
+                img: imgObj,
+                isLoaded: isLoaded,
+                emoji: emoji,
+                score: scoreVal,
+                hp: hpVal,
+                x: Math.random() * (GAME_WIDTH - 60) + 30, 
+                y: -50,
+                size: 50, // 👈 下落物體的大小
+                speed: Math.random() * 3 + 4.5 
+            });
+        }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
+            if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.y += item.speed;
+
+                if (
+                    item.y + item.size / 2 >= player.y - player.height / 2 &&
+                    item.y - item.size / 2 <= player.y + player.height / 2 &&
+                    item.x + item.size / 2 >= player.x - player.width / 2 &&
+                    item.x - item.size / 2 <= player.x + player.width / 2
+                ) {
+                    score += item.score;
+                    hp += item.hp;
+                    
+                    if (score < 0) score = 0;
+                    if (hp > 100) hp = 100;
+
+                    scoreText.innerText = score;
+                    hpBar.style.width = `${hp}%`;
+
+                    items.splice(i, 1);
+
+                    if (score >= 718) { endGame(true); return; }
+                    if (hp <= 0) { endGame(false); return; }
+                    continue;
+                }
+
+                if (item.y > GAME_HEIGHT) { items.splice(i, 1); }
+            }
+
+            drawGame();
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            ctx.fillStyle = '#E0F6FF';
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // 優先繪製你專屬的主角圖片
+            if (imgStatus.player) {
+                ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+            } else {
+                ctx.font = `${player.width}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🐱', player.x, player.y);
+            }
+
+            // 繪製掉落物
+            for (const item of items) {
+                if (imgStatus.noodle && imgStatus.ribs && imgStatus.kneepad) {
+                    ctx.drawImage(item.img, item.x - item.size / 2, item.y - item.size / 2, item.size, item.size);
+                } else {
+                    ctx.font = `${item.size}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(item.emoji, item.x, item.y);
+                }
+            }
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            clearInterval(spawnLoopId);
+
+            if (isWin) {
+                endTitle.innerText = "🎉 恭喜通關！";
+                endTitle.style.color = "#4cd137";
+                endMsg.innerHTML = `你成功達到了 <b>${score}</b> 分！<br>挑戰 718 成功！`;
+            } else {
+                endTitle.innerText = "💀 遊戲結束";
+                endTitle.style.color = "#ff4d4d";
+                endMsg.innerHTML = `體力耗盡了...<br>最終得分：<b>${score}</b> 分。`;
+            }
+            endScreen.classList.remove('hide');
+        }
+    </script>
+</body>
+</html>
