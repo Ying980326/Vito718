@@ -11,22 +11,25 @@
         
         canvas { display: block; width: 100%; height: 100%; image-rendering: -webkit-optimize-contrast; image-rendering: auto; }
         
-        #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; }
-        #hp-bar-container { width: 100px; height: 16px; background: #ccc; border-radius: 8px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1px solid #777; }
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 🛠️ 體力條容器稍微加寬，容納數字 */
+        #hp-container-wrapper { display: flex; align-items: center; }
+        #hp-bar-container { position: relative; width: 120px; height: 22px; background: #ccc; border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
         
-        /* 🛠️ 修正觸控區：高度縮小至 60%，且 z-index 降低，絕對不擋按鈕 */
+        /* 🛠️ 體力條數字顯示：置中展現 */
+        #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 13px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
+        
         .touch-zone { position: absolute; bottom: 0; width: 50%; height: 60%; z-index: 5; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
         
-        /* 🛠️ 提升選單畫面圖層：z-index 提到最高的 30，確保按鈕能被點擊 */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 30px; }
         .screen h1 { font-size: 36px; margin-bottom: 25px; color: #ffe066; }
         .screen p { font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
         .screen b { color: #ffbc00; }
         
-        /* 確保按鈕本身可以接收點擊事件 */
         .screen button { position: relative; z-index: 35; padding: 15px 40px; font-size: 22px; font-weight: bold; background: #4cd137; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); -webkit-tap-highlight-color: transparent; }
         .screen button:active { transform: translateY(2px); background: #44bd32; }
         .hide { display: none !important; }
@@ -37,7 +40,12 @@
     <div id="game-wrapper">
         <div id="hud">
             <div>分數: <span id="score-text">0</span> / 718</div>
-            <div>體力: <div id="hp-bar-container"><div id="hp-bar"></div></div></div>
+            <div id="hp-container-wrapper">
+                體力: 
+                <div id="hp-bar-container">
+                    <div id="hp-bar"></div>
+                    <div id="hp-text">100 / 100</div> </div>
+            </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
@@ -51,8 +59,9 @@
                🍜 麵：補血補分（+10 分 / +10 體力）<br>
                🥩 排骨：純補分（+30 分）<br>
                🦵 護膝：扣血扣分（-10 分 / -10 體力）<br><br>
+               ⚠️ <b>生存警告：體力每秒會自動減少 2 點！</b><br><br>
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
-               手機/iPad：點擊螢幕 左半邊 或 右半邊 移動
+               手機：點擊螢幕 左半邊 或 右半邊 移動
             </p>
             <button id="start-btn">開始遊戲</button>
         </div>
@@ -69,6 +78,7 @@
         const ctx = canvas.getContext('2d');
         const scoreText = document.getElementById('score-text');
         const hpBar = document.getElementById('hp-bar');
+        const hpText = document.getElementById('hp-text'); // 🛠️ 取得體力文字標籤
         const startScreen = document.getElementById('start-screen');
         const endScreen = document.getElementById('end-screen');
         const endTitle = document.getElementById('end-title');
@@ -78,7 +88,6 @@
         const GAME_WIDTH = 480;
         const GAME_HEIGHT = 800;
 
-        // 高清渲染設定
         const DPR = window.devicePixelRatio || 2; 
         canvas.width = GAME_WIDTH * DPR;
         canvas.height = GAME_HEIGHT * DPR;
@@ -95,12 +104,13 @@
 
         let imgStatus = { player: false, noodle: false, ribs: false, kneepad: false };
 
+        // 🛠️ 主角尺寸有感再放大（從 120 升級到 145 巨大化！）
         const player = { 
             x: GAME_WIDTH / 2, 
-            y: GAME_HEIGHT - 110, 
-            width: 120, 
-            height: 120, 
-            speed: 12 
+            y: GAME_HEIGHT - 120, 
+            width: 145, 
+            height: 145, 
+            speed: 13 // 體積變大，速度調快讓手感不笨重
         };
 
         const playerImg = new Image();
@@ -108,7 +118,7 @@
         playerImg.src = PLAYER_IMG_URL;
         playerImg.onload = () => {
             imgStatus.player = true;
-            const baseWidth = 120; 
+            const baseWidth = 145; 
             const scale = baseWidth / playerImg.width;
             player.width = baseWidth;
             player.height = playerImg.height * scale;
@@ -133,14 +143,12 @@
         let score = 0;
         let hp = 100;
         let moveDirection = 0;
-        let gameLoopId, spawnLoopId;
+        let gameLoopId, spawnLoopId, timeBurnLoopId; // 🛠️ 新增時間倒數計時器
         let items = [];
 
-        // 🛠️ 用更精準的綁定方式處理按鈕點擊，徹底解決手機不反應問題
         startBtn.addEventListener('click', startGame);
         document.getElementById('restart-btn').addEventListener('click', startGame);
 
-        // --- 控制偵聽 ---
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') moveDirection = -1;
             if (e.key === 'ArrowRight') moveDirection = 1;
@@ -166,6 +174,7 @@
             
             scoreText.innerText = score;
             hpBar.style.width = '100%';
+            hpText.innerText = '100 / 100'; // 🛠️ 初始化體力數值
             
             startScreen.classList.add('hide');
             endScreen.classList.add('hide');
@@ -173,9 +182,22 @@
 
             if (gameLoopId) cancelAnimationFrame(gameLoopId);
             if (spawnLoopId) clearInterval(spawnLoopId);
+            if (timeBurnLoopId) clearInterval(timeBurnLoopId); // 🛠️ 清除舊的時間計時器
 
             gameLoopId = requestAnimationFrame(updateGame);
             spawnLoopId = setInterval(spawnItem, 750); 
+            
+            // 🛠️ 【時間沙漏核心】：每 1 秒（1000毫秒）自動扣除 2 滴血
+            timeBurnLoopId = setInterval(() => {
+                if (!gameActive) return;
+                hp -= 2; // 每秒扣 2 血
+                if (hp <= 0) {
+                    hp = 0;
+                    endGame(false); // 體力扣光直接死亡
+                }
+                hpBar.style.width = `${hp}%`;
+                hpText.innerText = `${hp} / 100`; // 更新文字顯示
+            }, 1000);
         }
 
         function spawnItem() {
@@ -190,10 +212,11 @@
             if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
             if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
 
-            let itemW = 75; 
-            let itemH = 75; 
+            // 🛠️ 掉落物尺寸同步放大（從 75 暴增到 95 巨大化！）
+            let itemW = 95; 
+            let itemH = 95; 
             if (isLoaded && imgObj.width > 0) {
-                const baseSize = 75; 
+                const baseSize = 95; 
                 const scale = baseSize / imgObj.width;
                 itemW = baseSize;
                 itemH = imgObj.height * scale;
@@ -205,8 +228,9 @@
                 emoji: emoji,
                 score: scoreVal,
                 hp: hpVal,
-                x: Math.random() * (GAME_WIDTH - 90) + 45, 
-                y: -80,
+                // 調整邊界，避免巨大掉落物塞出牆壁
+                x: Math.random() * (GAME_WIDTH - 110) + 55, 
+                y: -100,
                 width: itemW,
                 height: itemH,
                 speed: Math.random() * 3 + 4.5 
@@ -234,9 +258,11 @@
                     
                     if (score < 0) score = 0;
                     if (hp > 100) hp = 100;
+                    if (hp < 0) hp = 0;
 
                     scoreText.innerText = score;
                     hpBar.style.width = `${hp}%`;
+                    hpText.innerText = `${hp} / 100`; // 🛠️ 接到東西時同步更新體力數字
 
                     items.splice(i, 1);
 
@@ -261,7 +287,7 @@
             if (imgStatus.player) {
                 ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
             } else {
-                ctx.font = `110px Arial`;
+                ctx.font = `130px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('🐱', player.x, player.y);
@@ -271,7 +297,7 @@
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
-                    ctx.font = `65px Arial`;
+                    ctx.font = `80px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(item.emoji, item.x, item.y);
@@ -283,6 +309,7 @@
             gameActive = false;
             cancelAnimationFrame(gameLoopId);
             clearInterval(spawnLoopId);
+            clearInterval(timeBurnLoopId); // 🛠️ 結束時停止扣血計時器
 
             if (isWin) {
                 endTitle.innerText = "🎉 恭喜通關！";
