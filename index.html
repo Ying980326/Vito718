@@ -40,8 +40,8 @@
         <div id="start-screen" class="screen">
             <h1>挑戰 718 分！</h1>
             <p><b>【遊戲玩法】</b><br><br>
-               🍜 糊塗麵：補血補分（+10 分 / +10 體力）<br>
-               🥩 炸排骨：純補分（+30 分）<br>
+               🍜 麵：補血補分（+10 分 / +10 體力）<br>
+               🥩 排骨：純補分（+30 分）<br>
                🦵 護膝：扣血扣分（-10 分 / -10 體力）<br><br>
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
                手機/iPad：點擊螢幕 左半邊 或 右半邊 移動
@@ -72,7 +72,7 @@
         canvas.height = GAME_HEIGHT;
 
         // ==========================================
-        // 📢 【 網址已幫你完美填入完成！ 】
+        // 📢 ImgBB 專屬直連網址
         // ==========================================
         const PLAYER_IMG_URL   = 'https://i.ibb.co/fYdbSTSG/image.png';
         const ITEM_NOODLE_URL  = 'https://i.ibb.co/BKf14n6g/image.png';
@@ -82,11 +82,27 @@
 
         let imgStatus = { player: false, noodle: false, ribs: false, kneepad: false };
 
-        // 加上跨域認證，確保 ImgBB 的圖片可以順利在畫布上渲染
+        // 玩家物件基礎屬性
+        const player = {
+            x: GAME_WIDTH / 2,
+            y: GAME_HEIGHT - 90,
+            width: 85,   // 預設寬度基準
+            height: 85,  // 預設高度基準
+            speed: 10
+        };
+
+        // 圖片載入並自動調整主角比例
         const playerImg = new Image();
         playerImg.crossOrigin = 'anonymous';
         playerImg.src = PLAYER_IMG_URL;
-        playerImg.onload = () => imgStatus.player = true;
+        playerImg.onload = () => {
+            imgStatus.player = true;
+            // 依原圖比例調整，將寬度固定為 90 像素，高度依比例縮放
+            const baseWidth = 90;
+            const scale = baseWidth / playerImg.width;
+            player.width = baseWidth;
+            player.height = playerImg.height * scale;
+        };
 
         const itemNoodleImg = new Image();
         itemNoodleImg.crossOrigin = 'anonymous';
@@ -109,15 +125,6 @@
         let hp = 100;
         let moveDirection = 0;
         let gameLoopId, spawnLoopId;
-
-        const player = {
-            x: GAME_WIDTH / 2,
-            y: GAME_HEIGHT - 90,
-            width: 85,   // 👈 如果圖片太大/太小，可以微調這個數值
-            height: 85,  // 👈 如果圖片太大/太小，可以微調這個數值
-            speed: 9.5   
-        };
-
         let items = [];
 
         // --- 控制偵聽 ---
@@ -170,6 +177,16 @@
             if (itemTypeIndex === 1) { scoreVal = 30; hpVal = 0; emoji = '🥩'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
             if (itemTypeIndex === 2) { scoreVal = -10; hpVal = -10; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
 
+            // 計算掉落物的等比例寬高
+            let itemW = 50;
+            let itemH = 50;
+            if (isLoaded && imgObj.width > 0) {
+                const baseSize = 50; // 掉落物基準寬度
+                const scale = baseSize / imgObj.width;
+                itemW = baseSize;
+                itemH = imgObj.height * scale;
+            }
+
             items.push({
                 img: imgObj,
                 isLoaded: isLoaded,
@@ -178,7 +195,8 @@
                 hp: hpVal,
                 x: Math.random() * (GAME_WIDTH - 60) + 30, 
                 y: -50,
-                size: 50, // 👈 下落物體的大小
+                width: itemW,
+                height: itemH,
                 speed: Math.random() * 3 + 4.5 
             });
         }
@@ -193,11 +211,12 @@
                 const item = items[i];
                 item.y += item.speed;
 
+                // 修正為精準的等比例矩形碰撞偵測
                 if (
-                    item.y + item.size / 2 >= player.y - player.height / 2 &&
-                    item.y - item.size / 2 <= player.y + player.height / 2 &&
-                    item.x + item.size / 2 >= player.x - player.width / 2 &&
-                    item.x - item.size / 2 <= player.x + player.width / 2
+                    item.y + item.height / 2 >= player.y - player.height / 2 &&
+                    item.y - item.height / 2 <= player.y + player.height / 2 &&
+                    item.x + item.width / 2 >= player.x - player.width / 2 &&
+                    item.x - item.width / 2 <= player.x + player.width / 2
                 ) {
                     score += item.score;
                     hp += item.hp;
@@ -223,27 +242,29 @@
         }
 
         function drawGame() {
+            // 每幀開頭徹底清除畫布，完美解決去背圖疊加產生黑框的問題
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+            // 重新繪製乾淨的背景
             ctx.fillStyle = '#E0F6FF';
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 優先繪製你專屬的主角圖片
+            // 繪製等比例主角
             if (imgStatus.player) {
                 ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
             } else {
-                ctx.font = `${player.width}px Arial`;
+                ctx.font = `80px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('🐱', player.x, player.y);
             }
 
-            // 繪製掉落物
+            // 繪製等比例掉落物
             for (const item of items) {
-                if (imgStatus.noodle && imgStatus.ribs && imgStatus.kneepad) {
-                    ctx.drawImage(item.img, item.x - item.size / 2, item.y - item.size / 2, item.size, item.size);
+                if (item.isLoaded) {
+                    ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
-                    ctx.font = `${item.size}px Arial`;
+                    ctx.font = `45px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(item.emoji, item.x, item.y);
