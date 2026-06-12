@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>718分極限挑戰接接樂 (圖片版)</title>
+    <title>糊塗麵挑戰！</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #222; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -12,7 +12,7 @@
         #game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 480px; /* 手機直向最理想寬度 */
+            max-width: 480px;
             height: 100vh;
             max-height: 800px;
             background: #E0F6FF;
@@ -46,7 +46,7 @@
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
 
         /* 手機觸控區域 */
-        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 80%; z-index: 5; /* background: rgba(255,0,0,0.1); 除錯用 */ }
+        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 80%; z-index: 5; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
 
@@ -74,13 +74,13 @@
         <div id="right-zone" class="touch-zone"></div>
 
         <div id="start-screen" class="screen">
-            <h1>圖片版接接樂</h1>
+            <h1>挑戰 718 分！</h1>
             <p><b>【遊戲玩法】</b><br><br>
-               🍎 (item_good.png)：+10 分 / +10 體力<br>
-               🌟 (item_bonus.png)：+30 分<br>
-               💣 (item_bad.png)：-20 分 / -20 體力<br><br>
-               電腦：使用 鍵盤← →移動<br>
-               手機/iPad：點擊螢幕左/右側移動
+               🍜 麵：補血補分（+10 分 / +10 體力）<br>
+               🥩 排骨：純補分（+30 分）<br>
+               🦵 護膝：扣血扣分（-10 分 / -10 體力）<br><br>
+               電腦：使用 鍵盤 ← → 方向鍵移動<br>
+               手機/iPad：點擊螢幕 左半邊 或 右半邊 移動
             </p>
             <button onclick="startGame()">開始遊戲</button>
         </div>
@@ -102,67 +102,75 @@
         const endTitle = document.getElementById('end-title');
         const endMsg = document.getElementById('end-msg');
 
-        // 設置 Canvas 解析度為固定值，讓它在所有設備上保持一致的邏輯座標
+        // 設置 Canvas 固定解析度
         const GAME_WIDTH = 480;
         const GAME_HEIGHT = 800;
         canvas.width = GAME_WIDTH;
         canvas.height = GAME_HEIGHT;
 
-        // --- 圖片載入 ---
+        // ==========================================
+        // 📢 【 填入你的 GOOGLE DRIVE 直連網址區 】
+        // ==========================================
+        const PLAYER_IMG_URL   = 'https://drive.google.com/file/d/1q9491QtvRAmaG6-WIgREULU1USyEM3gC/view?usp=drivesdk';
+        const ITEM_NOODLE_URL  = 'https://drive.google.com/file/d/1J-FBxC85ZlGLWbMc5A5qwppwmoPTnRAr/view?usp=drivesdk';
+        const ITEM_RIBS_URL    = 'https://drive.google.com/file/d/10nioQ-41zrzq9q_4uyMJ69mqqBKz2zdx/view?usp=drivesdk';
+        const ITEM_KNEEPAD_URL = 'https://drive.google.com/file/d/1CRspm8xBiu-kPExSLNyeILSpcG4PyJ45/view?usp=drivesdk';
+        // ==========================================
+
+        // --- 圖片加載與初始化 ---
         let imagesLoaded = 0;
         const totalImages = 4;
         function onImageLoad() {
             imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-                // 所有圖片載入完成，可以啟用「開始遊戲」按鈕
-                console.log("所有圖片已載入");
-            }
         }
 
         const playerImg = new Image();
-        playerImg.src = 'player.png'; // 主要人物
+        playerImg.src = PLAYER_IMG_URL;
         playerImg.onload = onImageLoad;
 
-        const itemGoodImg = new Image();
-        itemGoodImg.src = 'item_good.png'; // 補血補分東西
-        itemGoodImg.onload = onImageLoad;
+        const itemNoodleImg = new Image();
+        itemNoodleImg.src = ITEM_NOODLE_URL;
+        itemNoodleImg.onload = onImageLoad;
 
-        const itemBonusImg = new Image();
-        itemBonusImg.src = 'item_bonus.png'; // 只加分東西
-        itemBonusImg.onload = onImageLoad;
+        const itemRibsImg = new Image();
+        itemRibsImg.src = ITEM_RIBS_URL;
+        itemRibsImg.onload = onImageLoad;
 
-        const itemBadImg = new Image();
-        itemBadImg.src = 'item_bad.png'; // 扣血扣分東西
-        itemBadImg.onload = onImageLoad;
+        const itemKneepadImg = new Image();
+        itemKneepadImg.src = ITEM_KNEEPAD_URL;
+        itemKneepadImg.onload = onImageLoad;
 
 
-        // 遊戲參數配置
+        // 遊戲核心數據
         let gameActive = false;
         let score = 0;
         let hp = 100;
         let moveDirection = 0; // -1: 左, 1: 右, 0: 靜止
         let gameLoopId, spawnLoopId;
 
-        // 玩家物件
+        // ==========================================
+        // 🛠️ 【 專屬主要人物 尺寸與速度調整區 】
+        // ==========================================
         const player = {
             x: GAME_WIDTH / 2,
             y: GAME_HEIGHT - 90,
-            width: 70,  // 繪製大小
-            height: 70,
-            speed: 9    // 移動速度
+            width: 80,   // 👈 如果你覺得你的人物看起來太小，可以把數值調大（例如：100）
+            height: 80,  // 👈 如果你覺得你的人物看起來太小，可以把數值調大（例如：100）
+            speed: 9.5   // 👈 如果覺得人物移動太慢，可以調高（例如：12）或調低
         };
+        // ==========================================
 
-        // 掉落物品列表
+        // 掉落物列表
         let items = [];
 
-        // 物品種類定義
+        // 物品種類屬性定義
         const itemTypes = [
-            { img: itemGoodImg, score: 10, hp: 10 },    // 🍎
-            { img: itemBonusImg, score: 30, hp: 0 },   // 🌟
-            { img: itemBadImg, score: -20, hp: -20 }   // 💣
+            { img: itemNoodleImg, score: 10, hp: 10 },    // 麵 (+10分, +10體力)
+            { img: itemRibsImg, score: 30, hp: 0 },       // 排骨 (+30分, +0體力)
+            { img: itemKneepadImg, score: -10, hp: -10 }  // 護膝 (-10分, -10體力)
         ];
 
-        // --- 控制邏輯 (電腦鍵盤) ---
+        // --- 鍵盤操作控制 (電腦) ---
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') moveDirection = -1;
             if (e.key === 'ArrowRight') moveDirection = 1;
@@ -174,7 +182,7 @@
             }
         });
 
-        // --- 控制邏輯 (手機/iPad 觸控) ---
+        // --- 觸控操作控制 (手機 / iPad) ---
         const leftZone = document.getElementById('left-zone');
         const rightZone = document.getElementById('right-zone');
 
@@ -183,14 +191,14 @@
         rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; });
         rightZone.addEventListener('touchend', () => moveDirection = 0);
 
-        // --- 遊戲核心功能 ---
+        // --- 遊戲運作邏輯 ---
         function startGame() {
             if (imagesLoaded < totalImages) {
-                alert("圖片還沒載入完成，請稍候...");
+                alert("圖片正在努力載入中，請確認 Google Drive 網址轉換是否正確，且皆有開啟『知道連結的任何人』權限喔！");
                 return;
             }
 
-            // 初始化數據
+            // 數據歸零重設
             score = 0;
             hp = 100;
             player.x = GAME_WIDTH / 2;
@@ -204,118 +212,12 @@
             endScreen.classList.add('hide');
             gameActive = true;
 
-            // 啟動迴圈
+            // 啟動動畫與掉落計時器
             gameLoopId = requestAnimationFrame(updateGame);
-            spawnLoopId = setInterval(spawnItem, 700); // 物品掉落速度
+            spawnLoopId = setInterval(spawnItem, 750); // 每 0.75 秒生成一個物品
         }
 
         function spawnItem() {
             if (!gameActive) return;
 
-            // 隨機選擇物品種類
-            const rand = Math.random();
-            let type;
-            if (rand < 0.6) type = itemTypes[0];      // 🍎 (60% 機率)
-            else if (rand < 0.8) type = itemTypes[1]; // 🌟 (20% 機率)
-            else type = itemTypes[2];                 // 💣 (20% 機率)
-
-            // 建立物品數據
-            items.push({
-                img: type.img,
-                score: type.score,
-                hp: type.hp,
-                x: Math.random() * (GAME_WIDTH - 40) + 20, // 隨機水平位置
-                y: -50, // 螢幕上方開始
-                size: 45, // 物品繪製大小
-                speed: Math.random() * 3 + 4 // 隨機下落速度
-            });
-        }
-
-        function updateGame() {
-            if (!gameActive) return;
-
-            // --- 邏輯更新 ---
-            
-            // 1. 更新玩家位置
-            if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
-            if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
-
-            // 2. 更新所有掉落物品
-            for (let i = items.length - 1; i >= 0; i--) {
-                const item = items[i];
-                item.y += item.speed;
-
-                // --- 碰撞偵測 ---
-                // 使用簡單的 AABB 矩形碰撞偵測
-                if (
-                    item.y + item.size / 2 >= player.y - player.height / 2 &&
-                    item.y - item.size / 2 <= player.y + player.height / 2 &&
-                    item.x + item.size / 2 >= player.x - player.width / 2 &&
-                    item.x - item.size / 2 <= player.x + player.width / 2
-                ) {
-                    // 觸發吃到東西的效果
-                    score += item.score;
-                    hp += item.hp;
-                    
-                    // 確保分數不為負數，體力最高 100
-                    if (score < 0) score = 0;
-                    if (hp > 100) hp = 100;
-
-                    // 更新 UI
-                    scoreText.innerText = score;
-                    hpBar.style.width = `${hp}%`;
-
-                    // 移除物品
-                    items.splice(i, 1);
-
-                    // --- 檢查結束條件 ---
-                    if (score >= 718) {
-                        endGame(true);
-                        return;
-                    }
-                    if (hp <= 0) {
-                        endGame(false);
-                        return;
-                    }
-                    continue;
-                }
-
-                // 物品掉出螢幕底部，自動刪除
-                if (item.y > GAME_HEIGHT) {
-                    items.splice(i, 1);
-                }
-            }
-
-            // --- 繪製更新 ---
-            drawGame();
-
-            // 繼續下一幀
-            gameLoopId = requestAnimationFrame(updateGame);
-        }
-
-        function drawGame() {
-            // 清空畫布
-            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-            // 繪製背景 (可以改為繪製圖片)
-            ctx.fillStyle = '#E0F6FF';
-            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-            // 繪製玩家主要人物 (居中繪製)
-            ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
-
-            // 繪製所有掉落物品
-            for (const item of items) {
-                ctx.drawImage(item.img, item.x - item.size / 2, item.y - item.size / 2, item.size, item.size);
-            }
-        }
-
-        function endGame(isWin) {
-            gameActive = false;
-            cancelAnimationFrame(gameLoopId);
-            clearInterval(spawnLoopId);
-
-            if (isWin) {
-                endTitle.innerText = "🎉 恭喜通關！";
-                endTitle.style.color = "#4cd137";
-                endMsg.innerHTML = `你成功達到了 <b>${score}
+            // 隨機決定掉落物品種類機率 (麵：55% / 排骨：20%
