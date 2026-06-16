@@ -282,4 +282,75 @@
                     continue;
                 }
 
-                if (item.y > GAME_HEIGHT) {
+                if (item.y > GAME_HEIGHT) { items.splice(i, 1); }
+            }
+
+            drawGame();
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            if (imgStatus.bg) {
+                ctx.drawImage(bgImg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+            } else {
+                ctx.fillStyle = '#E0F6FF';
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            }
+
+            // 🛠️ 核心修改：繪製人物與動態鏡像轉頭邏輯
+            if (imgStatus.player) {
+                ctx.save(); // 儲存目前的畫布狀態
+                
+                if (player.facing === 'right') {
+                    // 如果朝向右邊，利用畫布矩陣進行水平翻轉
+                    ctx.translate(player.x, player.y);
+                    ctx.scale(-1, 1); // 水平鏡像
+                    ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
+                } else {
+                    // 如果朝向左邊（原始圖片），照正常方式繪製
+                    ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+                }
+                
+                ctx.restore(); // 恢復畫布狀態，避免影響後續物品的繪製
+            } else {
+                ctx.font = `130px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // 如果是Emoji，就用文字簡單表示朝向
+                ctx.fillText(player.facing === 'right' ? '👉' : '🐱', player.x, player.y);
+            }
+
+            for (const item of items) {
+                if (item.isLoaded) {
+                    ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
+                } else {
+                    ctx.font = `80px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(item.emoji, item.x, item.y);
+                }
+            }
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            clearInterval(spawnLoopId);
+            clearInterval(timeBurnLoopId); 
+
+            if (isWin) {
+                endTitle.innerText = "🎉 恭喜通關！";
+                endTitle.style.color = "#4cd137";
+                endMsg.innerHTML = `你成功達到了 <b>${score}</b> 分！<br>挑戰 718 成功！`;
+            } else {
+                endTitle.innerText = "💀 遊戲結束";
+                endTitle.style.color = "#ff4d4d";
+                endMsg.innerHTML = `體力耗盡了...<br>最終得分：<b>${score}</b> 分。`;
+            }
+            endScreen.classList.remove('hide');
+        }
+    </script>
+</body>
+</html>
