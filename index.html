@@ -188,9 +188,9 @@
         const ITEM_RIBS_URL    = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/rib.png';
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
 
-        // 🛠️ 派對帽微調參數：已恢復為改過一次的版本（往左及往下一點，往左大於往下）
+        // 🛠️ 派對帽微調參數：已恢復為改過一次的版本，並依要求將 Y 軸再往下移一些 (HAT_OFFSET_Y 改為 26)
         const HAT_OFFSET_X = -18;   // 派對帽左右偏移（正數往右，負數往左）
-        const HAT_OFFSET_Y = 12;   // 派對帽上下偏移（正數往下壓，負數往上飄）
+        const HAT_OFFSET_Y = 26;    // 派對帽上下偏移（正數往下壓，負數往上飄）
         // ==========================================
 
         let imgStatus = { bg: false, player: false, noodle: false, ribs: false, kneepad: false };
@@ -450,7 +450,7 @@
             if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
             if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
 
-            // 🛠️ 更新雲朵緩緩飄移邏輯 (橫跨螢幕後重置並於頂部 1/3 隨機 y 軸再現)
+            // 更新雲朵緩緩飄移邏輯 (橫跨螢幕後重置並於頂部 1/3 隨機 y 軸再現)
             for (let i = 0; i < clouds.length; i++) {
                 const c = clouds[i];
                 c.x += c.speed;
@@ -516,15 +516,15 @@
         function drawGame() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // A. 🛠️ 改回清晨粉藍色的美麗天空漸層背景
+            // A. 🛠️ 改回清晨粉藍色的美麗天空漸層背景（已拿掉粉紅色漸層，僅保留溫和明亮的純藍天漸層）
             const skyGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-            skyGrad.addColorStop(0, '#a1c4fd');   // 粉藍色
-            skyGrad.addColorStop(0.65, '#c2e9fb'); // 柔美淺藍
-            skyGrad.addColorStop(1, '#fbc2eb');   // 晨曦地平線粉紫色
+            skyGrad.addColorStop(0, '#81d4ff');   // 柔和天藍
+            skyGrad.addColorStop(0.7, '#bfe9ff'); // 淺水藍
+            skyGrad.addColorStop(1, '#e0f6ff');   // 極淺亮藍
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // B. 🛠️ 繪製背景頂部 1/3 的慢速移動半透明白雲 (真實天空感)
+            // B. 繪製背景頂部 1/3 的慢速移動半透明白雲 (真實天空感)
             ctx.save();
             for (const c of clouds) {
                 ctx.globalAlpha = c.opacity;
@@ -546,7 +546,7 @@
             }
             ctx.restore();
 
-            // C. 🛠️ 如果有上傳背景圖，則以半透明層疊，保留其紋理
+            // C. 如果有上傳背景圖，則以半透明層疊，保留其紋理
             if (imgStatus.bg) {
                 ctx.save();
                 ctx.globalAlpha = 0.25; 
@@ -554,7 +554,7 @@
                 ctx.restore();
             }
 
-            // D. 🛠️ 舞台所有元素 (地板、跑道、射燈、桁架、霓虹招牌) 已乾淨移除
+            // D. 舞台所有元素已乾淨移除
 
             // 4. 繪製主角（含派對帽、朝向翻轉邏輯）
             if (imgStatus.player) {
@@ -566,7 +566,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
-                        // 🛠️ 配合朝向渲染改過一次版本的派對帽定位！
+                        // 🛠️ 配合朝向渲染改過一次且往下微調版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 } else {
@@ -574,7 +574,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
-                        // 🛠️ 配合朝向渲染改過一次版本的派對帽定位！
+                        // 🛠️ 配合朝向渲染改過一次且往下微調版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 }
@@ -590,7 +590,7 @@
 
             // 5. 繪製掉落食物與地雷
             for (const item of items) {
-                // 🛠️ 護膝主體在藍天背景下已顯眼，移除紅色亮光效果
+                // 護膝主體在藍天背景下已顯眼，移除紅色亮光效果
 
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
