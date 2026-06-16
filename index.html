@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>糊塗麵大作戰 ⚔️</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: none; } /* 🛠️ 防止手機滑動時網頁亂滾動 */
         body { background: #222; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-wrapper { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 800px; background: #E0F6FF; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
         
@@ -19,16 +19,13 @@
         
         #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 13px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
         
-        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 60%; z-index: 5; }
-        #left-zone { left: 0; }
-        #right-zone { right: 0; }
+        /* 🛠️ 已移除舊的 .touch-zone 樣式，簡化程式碼 */
         
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 30px; }
         .screen h1 { font-size: 36px; margin-bottom: 25px; color: #ffe066; }
         .screen p { font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
         .screen b { color: #ffbc00; }
         
-        /* 按鈕樣式包裝與調整 */
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 260px; }
         .screen button { position: relative; z-index: 35; padding: 15px 30px; font-size: 20px; font-weight: bold; color: white; border: none; border-radius: 30px; cursor: pointer; -webkit-tap-highlight-color: transparent; width: 100%; }
         
@@ -38,7 +35,6 @@
         #restart-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
         #restart-btn:active { background: #44bd32; transform: translateY(2px); }
         
-        /* 🛠️ 新增的回到首頁按鈕藍色風格 */
         #home-btn { background: #00a8ff; box-shadow: 0 5px 20px rgba(0, 168, 255, 0.5); }
         #home-btn:active { background: #0097e6; transform: translateY(2px); }
         
@@ -48,6 +44,7 @@
 <body>
 
     <div id="game-wrapper">
+        <!-- 遊戲畫面上方的數據欄 -->
         <div id="hud">
             <div>分數: <span id="score-text">0</span> / 718</div>
             <div id="hp-container-wrapper">
@@ -59,10 +56,8 @@
             </div>
         </div>
 
+        <!-- 🛠️ 移除了原本的左右觸控 zone 區塊，現在全螢幕都可以直接拖曳人物 -->
         <canvas id="gameCanvas"></canvas>
-
-        <div id="left-zone" class="touch-zone"></div>
-        <div id="right-zone" class="touch-zone"></div>
 
         <div id="start-screen" class="screen">
             <h1>糊塗麵大作戰 ⚔️</h1>
@@ -72,7 +67,7 @@
                🦵 護膝：<b>超級地雷（-50 分 / -20 體力）</b><br><br>
                ⚠️ <b>生存警告：體力每秒會自動減少 2 點！</b><br><br>
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
-               手機：點擊螢幕 左半邊 或 右半邊 移動
+               手機：<b>在螢幕上單手左右拖曳移動人物</b>
             </p>
             <div class="btn-group">
                 <button id="start-btn">開始遊戲</button>
@@ -101,7 +96,7 @@
         const endMsg = document.getElementById('end-msg');
         const startBtn = document.getElementById('start-btn');
         const restartBtn = document.getElementById('restart-btn');
-        const homeBtn = document.getElementById('home-btn'); // 🛠️ 綁定新按鈕
+        const homeBtn = document.getElementById('home-btn');
 
         const GAME_WIDTH = 480;
         const GAME_HEIGHT = 800;
@@ -166,16 +161,19 @@
         let gameActive = false;
         let score = 0;
         let hp = 100;
-        let moveDirection = 0;
+        let moveDirection = 0; // 電腦鍵盤專用
         let gameLoopId, spawnLoopId, timeBurnLoopId; 
         let items = [];
 
+        // 🛠️ 專為手機單手拖曳設計的觸控追隨變數
+        let isDragging = false;
+        let lastTouchX = 0;
+
         startBtn.addEventListener('click', startGame);
         restartBtn.addEventListener('click', startGame);
-        
-        // 🛠️ 監聽回到首頁按鈕的點擊事件
         homeBtn.addEventListener('click', backToHome);
 
+        // --- 💻 電腦版鍵盤事件監聽 ---
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; }   
             if (e.key === 'ArrowRight') { moveDirection = 1; player.facing = 'right'; } 
@@ -184,13 +182,43 @@
             if ((e.key === 'ArrowLeft' && moveDirection === -1) || (e.key === 'ArrowRight' && moveDirection === 1)) moveDirection = 0;
         });
 
-        const leftZone = document.getElementById('left-zone');
-        const rightZone = document.getElementById('right-zone');
-        
-        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; player.facing = 'left'; });   
-        leftZone.addEventListener('touchend', () => moveDirection = 0);
-        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; player.facing = 'right'; }); 
-        rightZone.addEventListener('touchend', () => moveDirection = 0);
+        // --- 📱 手機版單手全螢幕「拖曳、跟隨」邏輯控制 ---
+        canvas.addEventListener('touchstart', (e) => {
+            if (!gameActive) return;
+            e.preventDefault();
+            isDragging = true;
+            
+            // 算出觸控點在 Canvas 設計尺寸中的相對 X 座標
+            const rect = canvas.getBoundingClientRect();
+            const touchX = ((e.touches[0].clientX - rect.left) / rect.width) * GAME_WIDTH;
+            lastTouchX = touchX;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!gameActive || !isDragging) return;
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const touchX = ((e.touches[0].clientX - rect.left) / rect.width) * GAME_WIDTH;
+            
+            // 計算手指移動了多少距離，人物就跟著位移多少
+            const deltaX = touchX - lastTouchX;
+            
+            if (deltaX < 0) player.facing = 'left';
+            if (deltaX > 0) player.facing = 'right';
+            
+            player.x += deltaX;
+            
+            // 邊界防漏：確保人物不會飄出螢幕外
+            if (player.x < player.width / 2) player.x = player.width / 2;
+            if (player.x > GAME_WIDTH - player.width / 2) player.x = GAME_WIDTH - player.width / 2;
+            
+            lastTouchX = touchX;
+        });
+
+        canvas.addEventListener('touchend', () => { isDragging = false; });
+        canvas.addEventListener('touchcancel', () => { isDragging = false; });
+
 
         function startGame() {
             score = 0;
@@ -198,6 +226,7 @@
             player.x = GAME_WIDTH / 2;
             player.facing = 'left'; 
             moveDirection = 0;
+            isDragging = false;
             items = [];
             
             scoreText.innerText = score;
@@ -227,10 +256,8 @@
             }, 1000);
         }
 
-        // 🛠️ 回到首頁的功能邏輯
         function backToHome() {
             gameActive = false;
-            // 清除可能還在跑的計時器，徹底重置狀態
             if (gameLoopId) cancelAnimationFrame(gameLoopId);
             if (spawnLoopId) clearInterval(spawnLoopId);
             if (timeBurnLoopId) clearInterval(timeBurnLoopId);
@@ -242,10 +269,8 @@
             hpBar.style.width = '100%';
             hpText.innerText = '100 / 100';
 
-            // 重新繪製一張乾淨的初始畫面
             drawGame();
 
-            // 切換畫面顯示：藏起結束畫面，顯示首頁說明畫面
             endScreen.classList.add('hide');
             startScreen.classList.remove('hide');
         }
@@ -289,6 +314,7 @@
         function updateGame() {
             if (!gameActive) return;
 
+            // 💻 如果是用電腦鍵盤玩，依舊採用速度位移
             if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
             if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
 
@@ -377,6 +403,7 @@
 
         function endGame(isWin) {
             gameActive = false;
+            isDragging = false;
             cancelAnimationFrame(gameLoopId);
             clearInterval(spawnLoopId);
             clearInterval(timeBurnLoopId); 
