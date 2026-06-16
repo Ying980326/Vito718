@@ -581,8 +581,8 @@
                 ctx.restore(); 
             } else {
                 ctx.save();
-                // 🛠️ 修正手機瀏覽器對於 Canvas 文字 Emoji 的字型相容性，強制引入彩色 Emoji 字型鏈
-                ctx.font = `120px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif, Arial`;
+                // 🛠️ 使用最輕量且高度相容、不含引號的 emoji 系統字型鏈，確保手機端 100% 渲染出彩色 emoji
+                ctx.font = `120px system-ui, -apple-system, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(player.facing === 'right' ? '👉' : '🐱', player.x, player.y);
@@ -599,12 +599,12 @@
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    // 🎂 精準等比例尺寸且修正手機 Emoji 顯示問題：
-                    // 改用手機原生 Emoji 字型鏈（"Apple Color Emoji", "Segoe UI Emoji"...），不使用會把 Emoji 卡死的純 Arial
+                    // 🛠️ 核心修正：移除會干擾行動裝置解譯的雙引號，改為最安全的 Emoji Fallback 字型鏈。
+                    // 同時維持蛋糕在視覺上與其他等大的 55px (食物 70px)
                     if (item.typeIndex === 99) {
-                        ctx.font = `55px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif, Arial`; 
+                        ctx.font = `55px system-ui, -apple-system, sans-serif`; 
                     } else {
-                        ctx.font = `70px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif, Arial`; 
+                        ctx.font = `70px system-ui, -apple-system, sans-serif`; 
                     }
                     ctx.fillText(item.emoji, item.x, item.y);
                     ctx.restore();
