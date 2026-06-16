@@ -11,16 +11,16 @@
         
         canvas { display: block; width: 100%; height: 100%; image-rendering: -webkit-optimize-contrast; image-rendering: auto; }
         
-        #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; align-items: center; }
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; align-items: center; }
         
-        #fever-text { color: #ff3f34; font-weight: 900; background: rgba(255, 224, 102, 0.9); padding: 2px 8px; border-radius: 5px; box-shadow: 0 0 5px #ffe066; display: none; font-size: 14px; animation: blink 1s infinite; }
+        #fever-text { color: #ff3f34; font-weight: 900; background: rgba(255, 224, 102, 0.9); padding: 2px 8px; border-radius: 5px; box-shadow: 0 0 5px #ffe066; display: none; font-size: 13px; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         #hp-container-wrapper { display: flex; align-items: center; }
-        #hp-bar-container { position: relative; width: 110px; height: 22px; background: #ccc; border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
+        #hp-bar-container { position: relative; width: 100px; height: 22px; background: #ccc; border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
         
-        #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 13px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
+        #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 12px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
         
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 25px; }
         .screen h1 { font-size: 34px; margin-bottom: 20px; color: #ffe066; line-height: 1.3; }
@@ -56,10 +56,10 @@
 
     <div id="game-wrapper">
         <div id="hud">
-            <div>分數: <span id="score-text">0</span>/718</div>
+            <div>SCORE: <span id="score-text">0</span>/718</div>
             <div id="fever-text">🎂 生日模式 5s</div>
             <div id="hp-container-wrapper">
-                體力: 
+                ENERGY: 
                 <div id="hp-bar-container">
                     <div id="hp-bar"></div>
                     <div id="hp-text">100/100</div>
@@ -84,11 +84,10 @@
         <div id="rules-screen" class="screen hide">
             <h1>遊戲規則</h1>
             <div class="rule-list">
-                <!-- 🛠️ 完美的浦洋最愛密碼分數配置 -->
-                <div class="rule-item">🍜 糊塗麵：+10分｜+5體力</div>
+                <div class="rule-item">🍜 糊塗麵：+10分｜+5 ENERGY</div>
                 <div class="rule-item">🍖 炸排骨：+17分</div>
-                <div class="rule-item">🦵 護膝：-30分｜-20體力</div>
-                <div class="rule-item" style="color: #ffe066;">🎂 驚喜道具：吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
+                <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
+                <div class="rule-item" style="color: #ffe066;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
                 <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.3); margin: 10px 0;">
                 <div class="rule-target">⭐ 目標：累積718分即可通關！</div>
                 
@@ -350,7 +349,6 @@
                 itemTypeIndex = Math.random() < 0.7 ? 0 : 1; 
             }
 
-            // 🛠️ 完美微調的分數：糊塗麵 +10 / 炸排骨 +17 / 護膝 -30
             let scoreVal = 10, hpVal = 5, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
             if (itemTypeIndex === 1) { scoreVal = 17; hpVal = 0; emoji = '🍖'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
             if (itemTypeIndex === 2) { scoreVal = -30; hpVal = -20; emoji = '🦵'; imgObj = itemKneepadImg; isLoaded = imgStatus.kneepad; }
