@@ -175,9 +175,9 @@
         const ITEM_RIBS_URL    = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/rib.png';
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
 
-        // 🛠️ 派對帽微調參數：已微調為往左 18 像素、往下 27 像素，戴起來更端正！
-        const HAT_OFFSET_X = -18;   // 派對帽左右偏移（正數往右，負數往左）
-        const HAT_OFFSET_Y = 27;   // 派對帽上下偏移（正數往下壓，負數往上飄）
+        // 🛠️ 派對帽微調參數：已依要求調為往左 24 像素、往下 32 像素，戴起來更萌更端正！
+        const HAT_OFFSET_X = -24;   // 派對帽左右偏移（正數往右，負數往左）
+        const HAT_OFFSET_Y = 32;   // 派對帽上下偏移（正數往下壓，負數往上飄）
         // ==========================================
 
         let imgStatus = { bg: false, player: false, noodle: false, ribs: false, kneepad: false };
@@ -617,7 +617,7 @@
             const skyGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
             skyGrad.addColorStop(0, '#04020c');
             skyGrad.addColorStop(0.4, '#0e081e');
-            skyGrad.addColorStop(1, '#1b0d35');
+            skyGrad.addColorStop(1, '#15092a');
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
@@ -632,7 +632,7 @@
             // C. 繪製 3D 空間舞台地板 (從 y=350 開始向下無限延伸)
             const horizonY = 350;
             const floorGrad = ctx.createLinearGradient(0, horizonY, 0, GAME_HEIGHT);
-            floorGrad.addColorStop(0, '#0c071a');
+            floorGrad.addColorStop(0, '#0a0515');
             floorGrad.addColorStop(1, '#050209');
             
             ctx.save();
@@ -646,7 +646,7 @@
             ctx.fill();
 
             // 地板亮漆 3D 縱向反光格線
-            ctx.strokeStyle = 'rgba(255, 42, 42, 0.05)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
             ctx.lineWidth = 1;
             for (let i = -100; i <= GAME_WIDTH + 100; i += 50) {
                 ctx.beginPath();
@@ -663,17 +663,17 @@
             }
             ctx.restore();
 
-            // D. 繪製通往舞台中央的巨型「Runway 璀璨星光大道」
+            // D. 🛠️ 繪製更寬敞氣派的巨型「Runway 璀璨星光大道」
             ctx.save();
-            // 繪製透視跑道區域
-            const roadLeftBottom = -40;
-            const roadRightBottom = GAME_WIDTH + 40;
-            const roadLeftTop = GAME_WIDTH / 2 - 45;
-            const roadRightTop = GAME_WIDTH / 2 + 45;
+            // 拓寬跑道區域
+            const roadLeftBottom = -80;
+            const roadRightBottom = GAME_WIDTH + 80;
+            const roadLeftTop = GAME_WIDTH / 2 - 120; // 🛠️ 大幅拓寬頂部 Runway (原為 -45)
+            const roadRightTop = GAME_WIDTH / 2 + 120; // 🛠️ 大幅拓寬頂部 Runway (原為 +45)
 
             const rGrad = ctx.createLinearGradient(0, horizonY, 0, GAME_HEIGHT);
-            rGrad.addColorStop(0, 'rgba(20, 10, 45, 0.9)');
-            rGrad.addColorStop(1, 'rgba(8, 3, 20, 0.95)');
+            rGrad.addColorStop(0, 'rgba(18, 12, 38, 0.95)');
+            rGrad.addColorStop(1, 'rgba(10, 6, 22, 0.98)');
             ctx.fillStyle = rGrad;
             ctx.beginPath();
             ctx.moveTo(roadLeftTop, horizonY);
@@ -683,48 +683,61 @@
             ctx.closePath();
             ctx.fill();
 
-            // Runway 兩側亮粉色與Tiffany藍的透視雙色發光邊框線
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 10;
-            
-            // 左側：Tiffany藍發光帶
-            ctx.strokeStyle = '#00f3ff';
-            ctx.shadowColor = '#00f3ff';
-            ctx.beginPath();
-            ctx.moveTo(roadLeftTop, horizonY);
-            ctx.lineTo(roadLeftBottom, GAME_HEIGHT);
-            ctx.stroke();
+            // 🛠️ 移除原有的藍/粉色邊緣以及虛線
 
-            // 右側：桃粉色發光帶
-            ctx.strokeStyle = '#ff0077';
-            ctx.shadowColor = '#ff0077';
-            ctx.beginPath();
-            ctx.moveTo(roadRightTop, horizonY);
-            ctx.lineTo(roadRightBottom, GAME_HEIGHT);
-            ctx.stroke();
+            // 🛠️ 新增：沿著 Runway 兩側邊緣繪製白色地板投射地燈與光束
+            const numGroundLights = 3;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+            for (let i = 0; i < numGroundLights; i++) {
+                const ratio = i / (numGroundLights - 1);
+                // 透視插值計算兩側地燈座標
+                const lx = roadLeftTop + (roadLeftBottom - roadLeftTop) * ratio;
+                const rx = roadRightTop + (roadRightBottom - roadRightTop) * ratio;
+                const ly = horizonY + (GAME_HEIGHT - horizonY) * ratio;
 
-            // Runway 舞台中心點綴的點狀流星跑馬燈
-            ctx.strokeStyle = '#fff';
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 4;
-            ctx.lineWidth = 1.5;
-            const dashOffset = (Date.now() * 0.02) % 60;
-            ctx.setLineDash([8, 22]);
-            ctx.lineDashOffset = -dashOffset;
-            
-            ctx.beginPath();
-            ctx.moveTo(roadLeftTop + 10, horizonY);
-            ctx.lineTo(roadLeftBottom + 40, GAME_HEIGHT);
-            ctx.moveTo(roadRightTop - 10, horizonY);
-            ctx.lineTo(roadRightBottom - 40, GAME_HEIGHT);
-            ctx.stroke();
-            ctx.setLineDash([]); // 還原
+                // 繪製地燈光源本體 (白色小圓)
+                ctx.save();
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(lx, ly, 4, 0, Math.PI * 2);
+                ctx.arc(rx, ly, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // 投射向上的白色扇形光錐
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const lightLength = 120 + ratio * 80;
+                const beamGrad = ctx.createLinearGradient(0, ly, 0, ly - lightLength);
+                beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+                beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = beamGrad;
+
+                // 左地燈光束
+                ctx.beginPath();
+                ctx.moveTo(lx, ly);
+                ctx.lineTo(lx - 25, ly - lightLength);
+                ctx.lineTo(lx + 25, ly - lightLength);
+                ctx.closePath();
+                ctx.fill();
+
+                // 右地燈光束
+                ctx.beginPath();
+                ctx.moveTo(rx, ly);
+                ctx.lineTo(rx - 25, ly - lightLength);
+                ctx.lineTo(rx + 25, ly - lightLength);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
 
             ctx.restore();
 
             // E. 兩側演唱會金屬桁架結構 (Truss)
             ctx.save();
-            ctx.strokeStyle = 'rgba(50, 50, 70, 0.4)';
+            ctx.strokeStyle = 'rgba(60, 60, 85, 0.35)';
             ctx.lineWidth = 2.5;
             // 左側架子
             ctx.beginPath();
@@ -764,21 +777,25 @@
         function drawConcertLights() {
             const t = Date.now() * 0.0012; // 時間變量，用於物理波動擺動
 
-            // 1. 左上角掃射射燈 (靛藍色 💙)
+            // 🛠️ 將所有角落舞台射燈全部統一調整為「璀璨白光」，更有日系極簡與現代感！
+            const whiteStart = 'rgba(255, 255, 255, 0.22)';
+            const whiteEnd = 'rgba(255, 255, 255, 0)';
+
+            // 1. 左上角掃射射燈 (白光 🤍)
             const angle1 = Math.PI * 0.18 + Math.sin(t) * 0.12; 
-            drawSpotlight(0, 80, angle1, 0.28, 480, 'rgba(0, 168, 255, 0.22)', 'rgba(0, 168, 255, 0)');
+            drawSpotlight(0, 80, angle1, 0.28, 480, whiteStart, whiteEnd);
 
-            // 2. 右上角掃射射燈 (魅惑粉紅 💗)
+            // 2. 右上角掃射射燈 (白光 🤍)
             const angle2 = Math.PI * 0.82 + Math.sin(t * 1.1 + 1.5) * 0.12;
-            drawSpotlight(GAME_WIDTH, 80, angle2, 0.28, 480, 'rgba(255, 0, 132, 0.22)', 'rgba(255, 0, 132, 0)');
+            drawSpotlight(GAME_WIDTH, 80, angle2, 0.28, 480, whiteStart, whiteEnd);
 
-            // 3. 左下角副舞台向上投射燈 (極光綠 💚)
+            // 3. 左下角副舞台投射燈 (白光 🤍)
             const angle3 = -Math.PI * 0.3 + Math.cos(t * 0.8) * 0.15;
-            drawSpotlight(0, 500, angle3, 0.22, 400, 'rgba(0, 255, 136, 0.12)', 'rgba(0, 255, 136, 0)');
+            drawSpotlight(0, 500, angle3, 0.22, 400, 'rgba(255, 255, 255, 0.12)', whiteEnd);
 
-            // 4. 右下角副舞台向上投射燈 (極炫紫 💜)
+            // 4. 右下角副舞台投射燈 (白光 🤍)
             const angle4 = -Math.PI * 0.7 + Math.cos(t * 0.9 + 2.0) * 0.15;
-            drawSpotlight(GAME_WIDTH, 500, angle4, 0.22, 400, 'rgba(168, 0, 255, 0.12)', 'rgba(168, 0, 255, 0)');
+            drawSpotlight(GAME_WIDTH, 500, angle4, 0.22, 400, 'rgba(255, 255, 255, 0.12)', whiteEnd);
         }
 
         function drawGame() {
@@ -790,7 +807,7 @@
             // 2. 繪製動態擺動的 4 束演唱會舞台聚光燈 (Spotlights)
             drawConcertLights();
 
-            // 3. 繪製奢華日式雙色霓虹燈招牌 VITO 0718
+            // 3. 繪製日式雙色霓虹燈招牌 VITO 0718
             drawNeonSign();
 
             // 4. 繪製主角（含派對帽、朝向翻轉邏輯）
@@ -823,8 +840,27 @@
                 ctx.restore();
             }
 
-            // 5. 繪製掉落食物與蛋糕 (已等比例化蛋糕大小)
+            // 5. 繪製掉落食物與地雷
             for (const item of items) {
+                // 🛠️ 核心功能修正：如果掉落物是「🦵 護膝（地雷）」，在它正後方渲染一圈紅色的霓虹發光預警圈！
+                if (item.typeIndex === 2) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'screen';
+                    
+                    // 呼吸動態半徑
+                    const glowRadius = 38 + Math.sin(Date.now() * 0.015) * 6;
+                    const rGrad = ctx.createRadialGradient(item.x, item.y, 10, item.x, item.y, glowRadius);
+                    rGrad.addColorStop(0, 'rgba(255, 42, 42, 0.7)');
+                    rGrad.addColorStop(0.4, 'rgba(255, 42, 42, 0.35)');
+                    rGrad.addColorStop(1, 'rgba(255, 42, 42, 0)');
+                    
+                    ctx.fillStyle = rGrad;
+                    ctx.beginPath();
+                    ctx.arc(item.x, item.y, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
@@ -843,42 +879,85 @@
             }
         }
 
-        // 繪製派對帽的向量繪圖
+        // 🛠️ 重新設計成超萌手繪 Q 版「蓬蓬波點生日派對帽」
         function drawPartyHat(x, y) {
             ctx.save();
             ctx.translate(x, y);
 
-            ctx.fillStyle = '#ff4757'; 
+            // 1. 繪製底部軟萌的波浪褶皺花邊 (Puffy Ribbon Trim)
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ff9f43';
+            ctx.lineWidth = 1;
+            const rWidth = 36;
+            const rY = 3;
+            const numBumps = 5;
             ctx.beginPath();
-            ctx.moveTo(0, -35);   
-            ctx.lineTo(-20, 0);   
-            ctx.lineTo(20, 0);    
+            ctx.moveTo(-rWidth/2, rY);
+            for (let i = 0; i < numBumps; i++) {
+                const startX = -rWidth/2 + (rWidth / numBumps) * i;
+                const endX = -rWidth/2 + (rWidth / numBumps) * (i + 1);
+                const midX = (startX + endX) / 2;
+                ctx.quadraticCurveTo(midX, rY - 6, endX, rY);
+            }
+            ctx.lineTo(rWidth/2, rY + 4);
+            ctx.lineTo(-rWidth/2, rY + 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 2. 繪製微弧形且略帶彈性膨脹感的手繪圓錐帽體
+            ctx.fillStyle = '#ff4d4d'; // Q 彈草莓紅
+            ctx.beginPath();
+            ctx.moveTo(0, -38); // 頂點
+            ctx.quadraticCurveTo(-14, -20, -17, rY); // 左邊緣略微圓潤
+            ctx.lineTo(17, rY);
+            ctx.quadraticCurveTo(14, -20, 0, -38); // 右邊緣略微圓潤
             ctx.closePath();
             ctx.fill();
 
-            ctx.strokeStyle = '#eccc68'; 
-            ctx.lineWidth = 3;
+            // 3. 繪製帽身上的可愛糖果波波點與粉藍斜斑紋 (Cuteness Overload)
+            ctx.save();
+            // 剪裁路徑，只繪製在帽體內部
             ctx.beginPath();
-            ctx.moveTo(-11, -15);
-            ctx.lineTo(11, -15);
+            ctx.moveTo(0, -38);
+            ctx.quadraticCurveTo(-14, -20, -17, rY);
+            ctx.lineTo(17, rY);
+            ctx.quadraticCurveTo(14, -20, 0, -38);
+            ctx.closePath();
+            ctx.clip();
+
+            // 繪製粉藍斜紋 (💙 浦洋藍色調)
+            ctx.strokeStyle = '#00a8ff';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(-20, -25); ctx.lineTo(10, -5);
+            ctx.moveTo(-10, -35); ctx.lineTo(20, -15);
             ctx.stroke();
 
-            ctx.strokeStyle = '#ffffff'; 
-            ctx.beginPath();
-            ctx.moveTo(-6, -24);
-            ctx.lineTo(6, -24);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#00a8ff'; 
-            ctx.beginPath();
-            ctx.moveTo(-16, -7);
-            ctx.lineTo(16, -7);
-            ctx.stroke();
-
+            // 繪製亮黃色、白色波波球圖案
+            ctx.fillStyle = '#ffe066';
+            ctx.beginPath(); ctx.arc(-5, -14, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(6, -22, 2.5, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(8, -10, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(-6, -27, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+
+            // 4. 帽頂的一大坨白色軟綿綿雲朵毛球 (Fluffy Pom-Pom)
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            const px = 0;
+            const py = -39;
+            const pRadius = 7.5;
             ctx.beginPath();
-            ctx.arc(0, -37, 5, 0, Math.PI * 2);
+            // 用多個重疊小圓融合成毛茸茸的雲朵感
+            ctx.arc(px, py, pRadius, 0, Math.PI * 2);
+            ctx.arc(px - 3, py + 1, pRadius * 0.7, 0, Math.PI * 2);
+            ctx.arc(px + 3, py + 1, pRadius * 0.7, 0, Math.PI * 2);
+            ctx.arc(px, py - 3, pRadius * 0.7, 0, Math.PI * 2);
             ctx.fill();
+            ctx.stroke();
 
             ctx.restore();
         }
