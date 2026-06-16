@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>718分極限挑戰接接樂</title>
+    <title>糊塗麵大作戰 ⚔️</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #222; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -53,7 +53,7 @@
         <div id="right-zone" class="touch-zone"></div>
 
         <div id="start-screen" class="screen">
-            <h1>糊塗麵最好吃</h1>
+            <h1>糊塗麵大作戰 ⚔️</h1>
             <p><b>【速戰速決新規則】</b><br><br>
                🍜 糊塗麵：大補分補血（<b>+20 分 / +5 體力</b>）<br>
                🥩 炸排骨：<b>超級搶分（+71 分）</b><br>
@@ -115,7 +115,7 @@
             width: 145, 
             height: 145, 
             speed: 13,
-            facing: 'left' // 🛠️ 紀錄角色當前的朝向（預設圖朝左）
+            facing: 'left' 
         };
 
         const playerImg = new Image();
@@ -155,8 +155,8 @@
         document.getElementById('restart-btn').addEventListener('click', startGame);
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; }   // 🛠️ 按左轉左
-            if (e.key === 'ArrowRight') { moveDirection = 1; player.facing = 'right'; } // 🛠️ 按右轉右
+            if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; }   
+            if (e.key === 'ArrowRight') { moveDirection = 1; player.facing = 'right'; } 
         });
         window.addEventListener('keyup', (e) => {
             if ((e.key === 'ArrowLeft' && moveDirection === -1) || (e.key === 'ArrowRight' && moveDirection === 1)) moveDirection = 0;
@@ -165,16 +165,16 @@
         const leftZone = document.getElementById('left-zone');
         const rightZone = document.getElementById('right-zone');
         
-        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; player.facing = 'left'; });   // 🛠️ 手機點左轉左
+        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; player.facing = 'left'; });   
         leftZone.addEventListener('touchend', () => moveDirection = 0);
-        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; player.facing = 'right'; }); // 🛠️ 手機點右轉右
+        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; player.facing = 'right'; }); 
         rightZone.addEventListener('touchend', () => moveDirection = 0);
 
         function startGame() {
             score = 0;
             hp = 100;
             player.x = GAME_WIDTH / 2;
-            player.facing = 'left'; // 重置朝向
+            player.facing = 'left'; 
             moveDirection = 0;
             items = [];
             
@@ -299,26 +299,22 @@
                 ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
             }
 
-            // 🛠️ 核心修改：繪製人物與動態鏡像轉頭邏輯
             if (imgStatus.player) {
-                ctx.save(); // 儲存目前的畫布狀態
+                ctx.save(); 
                 
                 if (player.facing === 'right') {
-                    // 如果朝向右邊，利用畫布矩陣進行水平翻轉
                     ctx.translate(player.x, player.y);
-                    ctx.scale(-1, 1); // 水平鏡像
+                    ctx.scale(-1, 1); 
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                 } else {
-                    // 如果朝向左邊（原始圖片），照正常方式繪製
                     ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
                 }
                 
-                ctx.restore(); // 恢復畫布狀態，避免影響後續物品的繪製
+                ctx.restore(); 
             } else {
                 ctx.font = `130px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                // 如果是Emoji，就用文字簡單表示朝向
                 ctx.fillText(player.facing === 'right' ? '👉' : '🐱', player.x, player.y);
             }
 
@@ -341,13 +337,14 @@
             clearInterval(timeBurnLoopId); 
 
             if (isWin) {
+                // 🛠️ 專屬勝利畫面文案修改
                 endTitle.innerText = "🎉 恭喜通關！";
                 endTitle.style.color = "#4cd137";
-                endMsg.innerHTML = `你成功達到了 <b>${score}</b> 分！<br>挑戰 718 成功！`;
+                endMsg.innerHTML = `成功收集 718 分！<br>把滿滿的幸福送到浦洋手上啦 🍜💙`;
             } else {
                 endTitle.innerText = "💀 遊戲結束";
                 endTitle.style.color = "#ff4d4d";
-                endMsg.innerHTML = `體力耗盡了...<br>最終得分：<b>${score}</b> 分。`;
+                endMsg.innerHTML = `體力耗盡了...再加把勁！<br>最終得分：<b>${score}</b> 分。`;
             }
             endScreen.classList.remove('hide');
         }
