@@ -114,7 +114,8 @@
             y: GAME_HEIGHT - 120, 
             width: 145, 
             height: 145, 
-            speed: 13 
+            speed: 13,
+            facing: 'left' // 🛠️ 紀錄角色當前的朝向（預設圖朝左）
         };
 
         const playerImg = new Image();
@@ -154,8 +155,8 @@
         document.getElementById('restart-btn').addEventListener('click', startGame);
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') moveDirection = -1;
-            if (e.key === 'ArrowRight') moveDirection = 1;
+            if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; }   // 🛠️ 按左轉左
+            if (e.key === 'ArrowRight') { moveDirection = 1; player.facing = 'right'; } // 🛠️ 按右轉右
         });
         window.addEventListener('keyup', (e) => {
             if ((e.key === 'ArrowLeft' && moveDirection === -1) || (e.key === 'ArrowRight' && moveDirection === 1)) moveDirection = 0;
@@ -164,15 +165,16 @@
         const leftZone = document.getElementById('left-zone');
         const rightZone = document.getElementById('right-zone');
         
-        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; });
+        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = -1; player.facing = 'left'; });   // 🛠️ 手機點左轉左
         leftZone.addEventListener('touchend', () => moveDirection = 0);
-        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; });
+        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); moveDirection = 1; player.facing = 'right'; }); // 🛠️ 手機點右轉右
         rightZone.addEventListener('touchend', () => moveDirection = 0);
 
         function startGame() {
             score = 0;
             hp = 100;
             player.x = GAME_WIDTH / 2;
+            player.facing = 'left'; // 重置朝向
             moveDirection = 0;
             items = [];
             
@@ -225,7 +227,7 @@
             }
 
             items.push({
-                typeIndex: itemTypeIndex, // 紀錄物品類型
+                typeIndex: itemTypeIndex,
                 img: imgObj,
                 isLoaded: isLoaded,
                 emoji: emoji,
@@ -249,11 +251,9 @@
                 const item = items[i];
                 item.y += item.speed;
 
-                // 🛠️ 敏感度降低核心：為主角與物品設定更精準的隱形「核心判定區 (Hitbox)」
-                const pCollisionWidth  = player.width * 0.65;  // 主角寬度判定縮小至 65%
-                const pCollisionHeight = player.height * 0.65; // 主角高度判定縮小至 65%
+                const pCollisionWidth  = player.width * 0.65;  
+                const pCollisionHeight = player.height * 0.65; 
 
-                // 護膝（typeIndex === 2）的判定範圍大幅收窄到 50%，食物則保留 70% 的核心區
                 const itemScale = (item.typeIndex === 2) ? 0.50 : 0.70;
                 const iCollisionWidth  = item.width * itemScale;
                 const iCollisionHeight = item.height * itemScale;
@@ -282,61 +282,4 @@
                     continue;
                 }
 
-                if (item.y > GAME_HEIGHT) { items.splice(i, 1); }
-            }
-
-            drawGame();
-            gameLoopId = requestAnimationFrame(updateGame);
-        }
-
-        function drawGame() {
-            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-            if (imgStatus.bg) {
-                ctx.drawImage(bgImg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-            } else {
-                ctx.fillStyle = '#E0F6FF';
-                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            }
-
-            if (imgStatus.player) {
-                ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
-            } else {
-                ctx.font = `130px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('🐱', player.x, player.y);
-            }
-
-            for (const item of items) {
-                if (item.isLoaded) {
-                    ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
-                } else {
-                    ctx.font = `80px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(item.emoji, item.x, item.y);
-                }
-            }
-        }
-
-        function endGame(isWin) {
-            gameActive = false;
-            cancelAnimationFrame(gameLoopId);
-            clearInterval(spawnLoopId);
-            clearInterval(timeBurnLoopId); 
-
-            if (isWin) {
-                endTitle.innerText = "🎉 恭喜通關！";
-                endTitle.style.color = "#4cd137";
-                endMsg.innerHTML = `你成功達到了 <b>${score}</b> 分！<br>挑戰 718 成功！`;
-            } else {
-                endTitle.innerText = "💀 遊戲結束";
-                endTitle.style.color = "#ff4d4d";
-                endMsg.innerHTML = `體力耗盡了...<br>最終得分：<b>${score}</b> 分。`;
-            }
-            endScreen.classList.remove('hide');
-        }
-    </script>
-</body>
-</html>
+                if (item.y > GAME_HEIGHT) {
