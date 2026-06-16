@@ -13,8 +13,12 @@
         
         #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #333; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 1px #fff; display: flex; justify-content: space-between; align-items: center; }
         
+        /* 🛠️ 新增生日模式 HUD 特效 */
+        #fever-text { color: #ff3f34; font-weight: 900; background: rgba(255, 224, 102, 0.9); padding: 2px 8px; border-radius: 5px; box-shadow: 0 0 5px #ffe066; display: none; font-size: 14px; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
         #hp-container-wrapper { display: flex; align-items: center; }
-        #hp-bar-container { position: relative; width: 120px; height: 22px; background: #ccc; border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
+        #hp-bar-container { position: relative; width: 110px; height: 22px; background: #ccc; border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
         #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
         
         #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 13px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
@@ -24,13 +28,12 @@
         .screen p { font-size: 19px; margin-bottom: 35px; line-height: 1.8; color: #f5f5f5; }
         .screen b { color: #ffbc00; }
         
-        .rule-list { text-align: left; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: 340px; }
-        .rule-item { font-size: 17px; margin-bottom: 12px; display: flex; align-items: center; line-height: 1.5; }
+        .rule-list { text-align: left; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: 350px; }
+        .rule-item { font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; line-height: 1.5; }
         .rule-item:last-child { margin-bottom: 0; }
-        .rule-target { font-size: 18px; color: #ffe066; font-weight: bold; margin-top: 15px; text-align: center; }
+        .rule-target { font-size: 17px; color: #ffe066; font-weight: bold; margin-top: 10px; text-align: center; }
         
-        /* 🛠️ 新增的操作說明排版區塊 */
-        .control-guide { font-size: 14px; color: #b0bec5; text-align: center; line-height: 1.6; margin-top: 15px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; }
+        .control-guide { font-size: 13px; color: #b0bec5; text-align: center; line-height: 1.6; margin-top: 10px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; }
 
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 260px; }
         .screen button { position: relative; z-index: 35; padding: 15px 30px; font-size: 20px; font-weight: bold; color: white; border: none; border-radius: 30px; cursor: pointer; -webkit-tap-highlight-color: transparent; width: 100%; }
@@ -54,12 +57,14 @@
 
     <div id="game-wrapper">
         <div id="hud">
-            <div>分數: <span id="score-text">0</span> / 718</div>
+            <div>分數: <span id="score-text">0</span>/718</div>
+            <!-- 🛠️ 生日模式倒數顯示 -->
+            <div id="fever-text">🎂 生日模式 5s</div>
             <div id="hp-container-wrapper">
                 體力: 
                 <div id="hp-bar-container">
                     <div id="hp-bar"></div>
-                    <div id="hp-text">100 / 100</div>
+                    <div id="hp-text">100/100</div>
                 </div>
             </div>
         </div>
@@ -84,7 +89,9 @@
                 <div class="rule-item">🍜 糊塗麵：+17分｜+5體力</div>
                 <div class="rule-item">🍖 炸排骨：+71分</div>
                 <div class="rule-item">🦵 護膝：-50分｜-20體力</div>
-                <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.3); margin: 15px 0;">
+                <!-- 🛠️ 新增規則說明的蛋糕驚喜 -->
+                <div class="rule-item" style="color: #ffe066;">🎂 滿200分掉落蛋糕：開啟5秒生日雙倍模式！</div>
+                <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.3); margin: 10px 0;">
                 <div class="rule-target">⭐ 目標：累積718分即可通關！</div>
                 
                 <div class="control-guide">
@@ -113,6 +120,7 @@
         const scoreText = document.getElementById('score-text');
         const hpBar = document.getElementById('hp-bar');
         const hpText = document.getElementById('hp-text');
+        const feverText = document.getElementById('fever-text'); // 🛠️ 綁定生日模式文字
         const startScreen = document.getElementById('start-screen');
         const rulesScreen = document.getElementById('rules-screen'); 
         const endScreen = document.getElementById('end-screen');
@@ -132,15 +140,11 @@
         canvas.height = GAME_HEIGHT * DPR;
         ctx.scale(DPR, DPR);
 
-        // ==========================================
-        // 📢 GitHub 專屬直連網址
-        // ==========================================
         const BACKGROUND_IMG_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/bg.png';
         const PLAYER_IMG_URL   = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/man.png';
         const ITEM_NOODLE_URL  = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/noodle.png';
         const ITEM_RIBS_URL    = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/rib.png';
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
-        // ==========================================
 
         let imgStatus = { bg: false, player: false, noodle: false, ribs: false, kneepad: false };
 
@@ -149,14 +153,7 @@
         bgImg.src = BACKGROUND_IMG_URL;
         bgImg.onload = () => imgStatus.bg = true;
 
-        const player = { 
-            x: GAME_WIDTH / 2, 
-            y: GAME_HEIGHT - 120, 
-            width: 145, 
-            height: 145, 
-            speed: 13,
-            facing: 'left' 
-        };
+        const player = { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 120, width: 145, height: 145, speed: 13, facing: 'left' };
 
         const playerImg = new Image();
         playerImg.crossOrigin = 'anonymous';
@@ -188,8 +185,13 @@
         let score = 0;
         let hp = 100;
         let moveDirection = 0; 
-        let gameLoopId, spawnLoopId, timeBurnLoopId; 
+        let gameLoopId, spawnLoopId, timeBurnLoopId, feverTimerId; 
         let items = [];
+
+        // 🛠️ 生日模式相關變數
+        let isFeverMode = false;
+        let feverTimeLeft = 0;
+        let hasSpawnedCake = false; 
 
         let isDragging = false;
         let lastTouchX = 0;
@@ -212,8 +214,7 @@
             e.preventDefault();
             isDragging = true;
             const rect = canvas.getBoundingClientRect();
-            const touchX = ((e.touches[0].clientX - rect.left) / rect.width) * GAME_WIDTH;
-            lastTouchX = touchX;
+            lastTouchX = ((e.touches[0].clientX - rect.left) / rect.width) * GAME_WIDTH;
         });
 
         canvas.addEventListener('touchmove', (e) => {
@@ -250,6 +251,12 @@
             isDragging = false;
             items = [];
             
+            // 🛠️ 重置生日模式狀態
+            isFeverMode = false;
+            hasSpawnedCake = false;
+            feverTimeLeft = 0;
+            feverText.style.display = 'none';
+
             scoreText.innerText = score;
             hpBar.style.width = '100%';
             hpText.innerText = '100 / 100'; 
@@ -262,6 +269,7 @@
             if (gameLoopId) cancelAnimationFrame(gameLoopId);
             if (spawnLoopId) clearInterval(spawnLoopId);
             if (timeBurnLoopId) clearInterval(timeBurnLoopId); 
+            if (feverTimerId) clearInterval(feverTimerId);
 
             gameLoopId = requestAnimationFrame(updateGame);
             spawnLoopId = setInterval(spawnItem, 450); 
@@ -269,10 +277,7 @@
             timeBurnLoopId = setInterval(() => {
                 if (!gameActive) return;
                 hp -= 2; 
-                if (hp <= 0) {
-                    hp = 0;
-                    endGame(false); 
-                }
+                if (hp <= 0) { hp = 0; endGame(false); }
                 hpBar.style.width = `${hp}%`;
                 hpText.innerText = `${hp} / 100`; 
             }, 1000);
@@ -283,28 +288,74 @@
             if (gameLoopId) cancelAnimationFrame(gameLoopId);
             if (spawnLoopId) clearInterval(spawnLoopId);
             if (timeBurnLoopId) clearInterval(timeBurnLoopId);
+            if (feverTimerId) clearInterval(feverTimerId);
             
             items = [];
             score = 0;
             hp = 100;
+            isFeverMode = false;
+            feverText.style.display = 'none';
             scoreText.innerText = score;
             hpBar.style.width = '100%';
             hpText.innerText = '100 / 100';
 
             drawGame();
-
             endScreen.classList.add('hide');
             rulesScreen.classList.add('hide'); 
             startScreen.classList.remove('hide');
         }
 
+        // 🛠️ 觸發啟動 5 秒生日模式
+        function activateFeverMode() {
+            if (isFeverMode) return;
+            isFeverMode = true;
+            feverTimeLeft = 5;
+            feverText.style.display = 'block';
+            feverText.innerText = `🎂 生日模式 ${feverTimeLeft}s`;
+
+            feverTimerId = setInterval(() => {
+                feverTimeLeft--;
+                if (feverTimeLeft <= 0) {
+                    clearInterval(feverTimerId);
+                    isFeverMode = false;
+                    feverText.style.display = 'none';
+                } else {
+                    feverText.innerText = `🎂 生日模式 ${feverTimeLeft}s`;
+                }
+            }, 1000);
+        }
+
         function spawnItem() {
             if (!gameActive) return;
+
+            // 🛠️ 檢查是否達到 200 分且尚未掉落蛋糕
+            if (score >= 200 && !hasSpawnedCake) {
+                hasSpawnedCake = true;
+                items.push({
+                    typeIndex: 99, // 99 代表蛋糕
+                    img: null,
+                    isLoaded: false,
+                    emoji: '🎂',
+                    score: 0,
+                    hp: 15, // 吃到蛋糕額外補 15 體力
+                    x: Math.random() * (GAME_WIDTH - 110) + 55, 
+                    y: -100,
+                    width: 95,
+                    height: 95,
+                    speed: 5
+                });
+                return;
+            }
 
             const rand = Math.random();
             let itemTypeIndex = 0; 
             if (rand >= 0.55 && rand < 0.75) itemTypeIndex = 1; 
             else if (rand >= 0.75) itemTypeIndex = 2; 
+
+            // 🛠️ 如果處於生日模式，自動不生成護膝(🦵)，給玩家全糖的純加分回饋
+            if (isFeverMode && itemTypeIndex === 2) {
+                itemTypeIndex = Math.random() < 0.7 ? 0 : 1; 
+            }
 
             let scoreVal = 17, hpVal = 5, emoji = '🍜', imgObj = itemNoodleImg, isLoaded = imgStatus.noodle;
             if (itemTypeIndex === 1) { scoreVal = 71; hpVal = 0; emoji = '🍖'; imgObj = itemRibsImg; isLoaded = imgStatus.ribs; }
@@ -330,7 +381,7 @@
                 y: -100,
                 width: itemW,
                 height: itemH,
-                speed: Math.random() * 3 + 4.5 
+                speed: Math.random() * 3 + (isFeverMode ? 6.5 : 4.5) // 生日狂熱模式下掉落稍微加快，更有刺激感！
             });
         }
 
@@ -357,8 +408,19 @@
                     item.x + iCollisionWidth / 2  >= player.x - pCollisionWidth / 2 &&
                     item.x - iCollisionWidth / 2  <= player.x + pCollisionWidth / 2
                 ) {
-                    score += item.score;
-                    hp += item.hp;
+                    // 🛠️ 判斷吃到的是否為蛋糕
+                    if (item.typeIndex === 99) {
+                        hp += item.hp;
+                        activateFeverMode(); // 啟動生日狂熱模式！
+                    } else {
+                        // 如果是生日模式，且吃到的是加分食物，分數翻倍！
+                        let finalScoreChange = item.score;
+                        if (isFeverMode && item.score > 0) {
+                            finalScoreChange = item.score * 2;
+                        }
+                        score += finalScoreChange;
+                        hp += item.hp;
+                    }
                     
                     if (score < 0) score = 0;
                     if (hp > 100) hp = 100;
@@ -394,7 +456,6 @@
 
             if (imgStatus.player) {
                 ctx.save(); 
-                
                 if (player.facing === 'right') {
                     ctx.translate(player.x, player.y);
                     ctx.scale(-1, 1); 
@@ -402,7 +463,6 @@
                 } else {
                     ctx.drawImage(playerImg, player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
                 }
-                
                 ctx.restore(); 
             } else {
                 ctx.font = `130px Arial`;
@@ -415,7 +475,8 @@
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
-                    ctx.font = `80px Arial`;
+                    // 🛠️ 渲染蛋糕或其他 Emoji
+                    ctx.font = item.typeIndex === 99 ? `90px Arial` : `80px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(item.emoji, item.x, item.y);
@@ -429,6 +490,7 @@
             cancelAnimationFrame(gameLoopId);
             clearInterval(spawnLoopId);
             clearInterval(timeBurnLoopId); 
+            if (feverTimerId) clearInterval(feverTimerId);
 
             if (isWin) {
                 endTitle.innerText = "⭐ 718達成！⭐";
