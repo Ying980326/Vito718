@@ -6,7 +6,7 @@
     <title>糊塗麵大作戰 ⚔️</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: none; } 
-        body { background: #111; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { background: #E0F6FF; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
         #game-wrapper { 
             position: relative; 
@@ -17,7 +17,7 @@
             background: #E0F6FF; 
             border-radius: 12px; 
             overflow: hidden; 
-            box-shadow: 0 10px 35px rgba(0,0,0,0.85);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.2);
             border: 3px solid transparent;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
@@ -39,17 +39,16 @@
         
         canvas { display: block; width: 100%; height: 100%; image-rendering: -webkit-optimize-contrast; image-rendering: auto; }
         
-        /* 提升 HUD 文字在亮色清晨背景下的可讀性 */
         #hud { 
             position: absolute; 
             top: 15px; 
             left: 15px; 
             right: 15px; 
             z-index: 10; 
-            color: #fff; 
+            color: #333; 
             font-size: 16px; 
             font-weight: bold; 
-            text-shadow: 1px 1px 3px #000, -1px -1px 3px #000, 1px -1px 3px #000, -1px 1px 3px #000; 
+            text-shadow: 1px 1px 1px #fff; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -59,36 +58,36 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         #hp-container-wrapper { display: flex; align-items: center; }
-        #hp-bar-container { position: relative; width: 100px; height: 22px; background: rgba(0, 0, 0, 0.4); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #ff4d4d; }
-        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff7675); transition: width 0.1s ease; }
+        #hp-bar-container { position: relative; width: 100px; height: 22px; background: rgba(200, 200, 200, 0.6); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
+        #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
         
         #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 12px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
         
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 3, 15, 0.92); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 25px; }
-        .screen h1 { font-size: 34px; margin-bottom: 20px; color: #ffe066; line-height: 1.3; text-shadow: 0 0 10px rgba(255,224,102,0.5); }
-        .screen p { font-size: 19px; margin-bottom: 35px; line-height: 1.8; color: #f5f5f5; }
-        .screen b { color: #ffbc00; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 246, 255, 0.95); color: #333; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 25px; }
+        .screen h1 { font-size: 34px; margin-bottom: 20px; color: #ff9f43; line-height: 1.3; text-shadow: 1px 1px 2px #fff; }
+        .screen p { font-size: 19px; margin-bottom: 35px; line-height: 1.8; color: #555; }
+        .screen b { color: #e056fd; }
         
-        .rule-list { text-align: left; background: rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.15); width: 100%; max-width: 350px; }
-        .rule-item { font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; line-height: 1.5; }
+        .rule-list { text-align: left; background: rgba(255,255,255,0.6); padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        .rule-item { font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; line-height: 1.5; color: #444; }
         .rule-item:last-child { margin-bottom: 0; }
-        .rule-target { font-size: 17px; color: #ffe066; font-weight: bold; margin-top: 10px; text-align: center; }
+        .rule-target { font-size: 17px; color: #ff9f43; font-weight: bold; margin-top: 10px; text-align: center; text-shadow: 1px 1px 1px #fff; }
         
-        .control-guide { font-size: 13px; color: #b0bec5; text-align: center; line-height: 1.6; margin-top: 10px; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 8px; }
+        .control-guide { font-size: 13px; color: #666; text-align: center; line-height: 1.6; margin-top: 10px; background: rgba(255,255,255,0.8); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); }
 
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 260px; }
         .screen button { position: relative; z-index: 35; padding: 15px 30px; font-size: 20px; font-weight: bold; color: white; border: none; border-radius: 30px; cursor: pointer; -webkit-tap-highlight-color: transparent; width: 100%; }
         
-        #start-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
+        #start-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.4); }
         #start-btn:active { background: #44bd32; transform: translateY(2px); }
         
-        #go-btn { background: #ff9f43; box-shadow: 0 5px 20px rgba(255, 159, 67, 0.5); }
+        #go-btn { background: #ff9f43; box-shadow: 0 5px 20px rgba(255, 159, 67, 0.4); }
         #go-btn:active { background: #ee5253; transform: translateY(2px); }
 
-        #restart-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
+        #restart-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.4); }
         #restart-btn:active { background: #44bd32; transform: translateY(2px); }
         
-        #home-btn { background: #00a8ff; box-shadow: 0 5px 20px rgba(0, 168, 255, 0.5); }
+        #home-btn { background: #00a8ff; box-shadow: 0 5px 20px rgba(0, 168, 255, 0.4); }
         #home-btn:active { background: #0097e6; transform: translateY(2px); }
         
         .hide { display: none !important; }
@@ -129,8 +128,8 @@
                 <div class="rule-item">🍜 糊塗麵：+10分｜+5 ENERGY</div>
                 <div class="rule-item">🍖 炸排骨：+17分</div>
                 <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
-                <div class="rule-item" style="color: #ffe066;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
-                <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.3); margin: 10px 0;">
+                <div class="rule-item" style="color: #e056fd; font-weight: bold;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
+                <hr style="border: 0; border-top: 1px dashed rgba(0,0,0,0.1); margin: 10px 0;">
                 <div class="rule-target">⭐ 目標：累積718分即可通關！</div>
                 
                 <div class="control-guide">
@@ -189,9 +188,9 @@
         const ITEM_RIBS_URL    = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/rib.png';
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
 
-        // 🛠️ 派對帽微調參數：已恢復上一版最完美的偏移位置！
-        const HAT_OFFSET_X = 0;   // 派對帽左右偏移（正數往右，負數往左）
-        const HAT_OFFSET_Y = 15;   // 派對帽上下偏移（正數往下壓，負數往上飄）
+        // 🛠️ 派對帽微調參數：已恢復為改過一次的版本（往左及往下一點，往左大於往下）
+        const HAT_OFFSET_X = -18;   // 派對帽左右偏移（正數往右，負數往左）
+        const HAT_OFFSET_Y = 12;   // 派對帽上下偏移（正數往下壓，負數往上飄）
         // ==========================================
 
         let imgStatus = { bg: false, player: false, noodle: false, ribs: false, kneepad: false };
@@ -236,13 +235,12 @@
         let gameLoopId, spawnLoopId, timeBurnLoopId, feverTimerId; 
         let items = [];
 
-        // 生日模式與背景特效相關變數
+        // 生日模式相關變數
         let isFeverMode = false;
         let feverTimeLeft = 0;
         let hasSpawnedCake = false; 
-        let neonFlicker = 1;    // 招牌電流閃爍明亮度
         
-        // 🛠️ 清晨雲朵資料
+        // 🛠️ 雲朵資料
         let clouds = [];
 
         let isDragging = false;
@@ -309,7 +307,7 @@
             feverText.style.display = 'none';
             gameWrapper.classList.remove('fever-active');
 
-            // 🛠️ 初始化清晨背景中緩緩移動的半透明白雲 (限定在螢幕頂部 1/3)
+            // 🛠️ 初始化背景中緩緩移動的半透明白雲 (限定在螢幕頂部 1/3)
             clouds = [
                 { x: 30, y: 50, scale: 0.9, speed: 0.12, opacity: 0.42 },
                 { x: 180, y: 110, scale: 1.2, speed: 0.08, opacity: 0.55 },
@@ -452,12 +450,6 @@
             if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
             if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
 
-            if (Math.random() < 0.05) {
-                neonFlicker = Math.random() < 0.2 ? 0.4 : 1.0; 
-            } else {
-                neonFlicker = Math.min(1.0, neonFlicker + 0.1); 
-            }
-
             // 🛠️ 更新雲朵緩緩飄移邏輯 (橫跨螢幕後重置並於頂部 1/3 隨機 y 軸再現)
             for (let i = 0; i < clouds.length; i++) {
                 const c = clouds[i];
@@ -521,135 +513,9 @@
             gameLoopId = requestAnimationFrame(updateGame);
         }
 
-        function pathRoundRect(ctx, x, y, width, height, radius) {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-        }
+        function drawGame() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-        function drawNeonSign() {
-            ctx.save();
-            
-            const signX = GAME_WIDTH / 2;
-            const signY = 135;
-            const signW = 240;
-            const signH = 88; // 稍微拉高容納副標題
-
-            // 1. 繪製精緻雙吊掛金屬鏈
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(signX - 90, signY - 44);
-            ctx.lineTo(signX - 45, signY - 80);
-            ctx.lineTo(signX + 45, signY - 80);
-            ctx.lineTo(signX + 90, signY - 44);
-            ctx.stroke();
-
-            // 2. 日系半透明深色黑膠背板
-            ctx.fillStyle = 'rgba(10, 8, 18, 0.88)';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1.5;
-            ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetY = 8;
-            pathRoundRect(ctx, signX - signW/2, signY - signH/2, signW, signH, 12);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-
-            // 3. 繪製日式屏風網格背景 (Kusiko)
-            ctx.strokeStyle = 'rgba(255, 42, 42, 0.12)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            // 縱線
-            for (let ox = -signW/2 + 20; ox < signW/2; ox += 25) {
-                ctx.moveTo(signX + ox, signY - signH/2 + 6);
-                ctx.lineTo(signX + ox, signY + signH/2 - 6);
-            }
-            // 橫線
-            for (let oy = -signH/2 + 15; oy < signH/2; oy += 20) {
-                ctx.moveTo(signX - signW/2 + 6, signY + oy);
-                ctx.lineTo(signX + signW/2 - 6, signY + oy);
-            }
-            ctx.stroke();
-
-            // 4. 極具張力的日式大紅色雙重霓虹外框 (日系霓虹街頭核心)
-            ctx.save();
-            ctx.strokeStyle = '#ff2a2a'; // 鮮亮正紅色
-            ctx.lineWidth = 4;
-            ctx.shadowColor = '#ff2a2a';
-            ctx.shadowBlur = isFeverMode ? 25 : 14;
-            ctx.globalAlpha = neonFlicker * 0.85;
-            // 外層紅框
-            pathRoundRect(ctx, signX - signW/2 + 6, signY - signH/2 + 6, signW - 12, signH - 12, 8);
-            ctx.stroke();
-
-            // 內層紅白光芯
-            ctx.strokeStyle = '#fff2f2';
-            ctx.lineWidth = 1.5;
-            ctx.shadowBlur = 4;
-            pathRoundRect(ctx, signX - signW/2 + 6, signY - signH/2 + 6, signW - 12, signH - 12, 8);
-            ctx.stroke();
-            ctx.restore();
-
-            // 5. 頂部迷你金色日系漢字燈管：【生誕祭】
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = 'bold 15px "Microsoft JhengHei", sans-serif';
-            ctx.letterSpacing = '6px';
-            
-            // 金色霓虹發光層
-            ctx.strokeStyle = '#ffcc00';
-            ctx.lineWidth = 3.5;
-            ctx.shadowColor = '#ffaa00';
-            ctx.shadowBlur = isFeverMode ? 14 : 8;
-            ctx.globalAlpha = neonFlicker * 0.9;
-            ctx.strokeText('生誕祭', signX + 3, signY - 24); // 補償字體間距
-
-            // 白色極致燈芯層
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = '#ffffff';
-            ctx.shadowBlur = 2;
-            ctx.globalAlpha = neonFlicker;
-            ctx.fillText('生誕祭', signX + 3, signY - 24);
-            ctx.restore();
-
-            // 6. 主標題 "VITO 0718"：極美浦洋藍霓虹燈
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = 'bold 28px "Arial Black", Impact, sans-serif'; 
-            
-            // 浦洋藍發光層
-            ctx.strokeStyle = '#00f0ff';
-            ctx.lineWidth = 6;
-            ctx.shadowColor = '#00d2ff';
-            ctx.shadowBlur = isFeverMode ? 22 : 12;
-            ctx.globalAlpha = neonFlicker * 0.9;
-            ctx.strokeText('VITO 0718', signX, signY + 14);
-
-            // 白色燈芯層
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = '#ffffff';
-            ctx.shadowBlur = 3;
-            ctx.globalAlpha = neonFlicker;
-            ctx.fillText('VITO 0718', signX, signY + 14);
-            ctx.restore();
-
-            ctx.restore();
-        }
-
-        function drawStageBackground() {
             // A. 🛠️ 改回清晨粉藍色的美麗天空漸層背景
             const skyGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
             skyGrad.addColorStop(0, '#a1c4fd');   // 粉藍色
@@ -680,189 +546,15 @@
             }
             ctx.restore();
 
-            // C. 🛠️ 結合有上傳的背景圖 (以極細微半透明層疊，保留細節又不破壞清晨美感)
+            // C. 🛠️ 如果有上傳背景圖，則以半透明層疊，保留其紋理
             if (imgStatus.bg) {
                 ctx.save();
-                ctx.globalAlpha = 0.22; 
+                ctx.globalAlpha = 0.25; 
                 ctx.drawImage(bgImg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
                 ctx.restore();
             }
 
-            // D. 繪製 3D 空間舞台地板 (從 y=350 開始向下無限延伸)
-            const horizonY = 350;
-            const floorGrad = ctx.createLinearGradient(0, horizonY, 0, GAME_HEIGHT);
-            floorGrad.addColorStop(0, 'rgba(15, 12, 35, 0.85)');
-            floorGrad.addColorStop(1, 'rgba(8, 5, 20, 0.95)');
-            
-            ctx.save();
-            ctx.fillStyle = floorGrad;
-            ctx.beginPath();
-            ctx.moveTo(0, horizonY);
-            ctx.lineTo(GAME_WIDTH, horizonY);
-            ctx.lineTo(GAME_WIDTH, GAME_HEIGHT);
-            ctx.lineTo(0, GAME_HEIGHT);
-            ctx.closePath();
-            ctx.fill();
-
-            // 地板亮漆 3D 縱向反光格線
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-            ctx.lineWidth = 1;
-            for (let i = -100; i <= GAME_WIDTH + 100; i += 50) {
-                ctx.beginPath();
-                ctx.moveTo(GAME_WIDTH / 2 + (i - GAME_WIDTH / 2) * 0.1, horizonY);
-                ctx.lineTo(i, GAME_HEIGHT);
-                ctx.stroke();
-            }
-            // 橫向透視格線
-            for (let h = horizonY; h < GAME_HEIGHT; h += (GAME_HEIGHT - h) * 0.18 + 8) {
-                ctx.beginPath();
-                ctx.moveTo(0, h);
-                ctx.lineTo(GAME_WIDTH, h);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            // E. 繪製寬敞大器的巨型「Runway 璀璨星光大道」
-            ctx.save();
-            const roadLeftBottom = -80;
-            const roadRightBottom = GAME_WIDTH + 80;
-            const roadLeftTop = GAME_WIDTH / 2 - 120; // 寬敞 Runway 頂端
-            const roadRightTop = GAME_WIDTH / 2 + 120; // 寬敞 Runway 頂端
-
-            const rGrad = ctx.createLinearGradient(0, horizonY, 0, GAME_HEIGHT);
-            rGrad.addColorStop(0, 'rgba(26, 21, 56, 0.92)');
-            rGrad.addColorStop(1, 'rgba(14, 10, 32, 0.96)');
-            ctx.fillStyle = rGrad;
-            ctx.beginPath();
-            ctx.moveTo(roadLeftTop, horizonY);
-            ctx.lineTo(roadRightTop, horizonY);
-            ctx.lineTo(roadRightBottom, GAME_HEIGHT);
-            ctx.lineTo(roadLeftBottom, GAME_HEIGHT);
-            ctx.closePath();
-            ctx.fill();
-
-            // F. 沿著 Runway 兩側邊緣繪製白色地板投射地燈與光束
-            const numGroundLights = 3;
-            for (let i = 0; i < numGroundLights; i++) {
-                const ratio = i / (numGroundLights - 1);
-                const lx = roadLeftTop + (roadLeftBottom - roadLeftTop) * ratio;
-                const rx = roadRightTop + (roadRightBottom - roadRightTop) * ratio;
-                const ly = horizonY + (GAME_HEIGHT - horizonY) * ratio;
-
-                // 繪製地燈光源本體 (白色小圓)
-                ctx.save();
-                ctx.shadowColor = '#ffffff';
-                ctx.shadowBlur = 10;
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(lx, ly, 4, 0, Math.PI * 2);
-                ctx.arc(rx, ly, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-
-                // 投射向上的白色扇形光錐
-                ctx.save();
-                ctx.globalCompositeOperation = 'screen';
-                const lightLength = 120 + ratio * 80;
-                const beamGrad = ctx.createLinearGradient(0, ly, 0, ly - lightLength);
-                beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-                beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                ctx.fillStyle = beamGrad;
-
-                // 左地燈光束
-                ctx.beginPath();
-                ctx.moveTo(lx, ly);
-                ctx.lineTo(lx - 25, ly - lightLength);
-                ctx.lineTo(lx + 25, ly - lightLength);
-                ctx.closePath();
-                ctx.fill();
-
-                // 右地燈光束
-                ctx.beginPath();
-                ctx.moveTo(rx, ly);
-                ctx.lineTo(rx - 25, ly - lightLength);
-                ctx.lineTo(rx + 25, ly - lightLength);
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-            }
-
-            ctx.restore();
-
-            // G. 兩側演唱會金屬桁架結構 (Truss)
-            ctx.save();
-            ctx.strokeStyle = 'rgba(80, 80, 110, 0.4)';
-            ctx.lineWidth = 2.5;
-            // 左側架子
-            ctx.beginPath();
-            ctx.moveTo(0, 100);
-            ctx.lineTo(40, horizonY);
-            ctx.lineTo(0, horizonY + 80);
-            ctx.moveTo(0, horizonY);
-            ctx.lineTo(40, horizonY);
-            ctx.stroke();
-            // 右側架子
-            ctx.beginPath();
-            ctx.moveTo(GAME_WIDTH, 100);
-            ctx.lineTo(GAME_WIDTH - 40, horizonY);
-            ctx.lineTo(GAME_WIDTH, horizonY + 80);
-            ctx.moveTo(GAME_WIDTH, horizonY);
-            ctx.lineTo(GAME_WIDTH - 40, horizonY);
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        function drawSpotlight(sourceX, sourceY, targetAngle, spreadAngle, length, colorStart, colorEnd) {
-            ctx.save();
-            ctx.globalCompositeOperation = 'screen';
-            const grad = ctx.createRadialGradient(sourceX, sourceY, 0, sourceX, sourceY, length);
-            grad.addColorStop(0, colorStart);
-            grad.addColorStop(0.3, colorStart);
-            grad.addColorStop(1, colorEnd);
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(sourceX, sourceY);
-            ctx.arc(sourceX, sourceY, length, targetAngle - spreadAngle/2, targetAngle + spreadAngle/2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-        }
-
-        function drawConcertLights() {
-            const t = Date.now() * 0.0012; // 時間變量，用於物理波動擺動
-
-            // 所有角落舞台射燈全部統一調整為「璀璨白光」
-            const whiteStart = 'rgba(255, 255, 255, 0.22)';
-            const whiteEnd = 'rgba(255, 255, 255, 0)';
-
-            // 1. 左上角掃射射燈 (白光 🤍)
-            const angle1 = Math.PI * 0.18 + Math.sin(t) * 0.12; 
-            drawSpotlight(0, 80, angle1, 0.28, 480, whiteStart, whiteEnd);
-
-            // 2. 右上角掃射射燈 (白光 🤍)
-            const angle2 = Math.PI * 0.82 + Math.sin(t * 1.1 + 1.5) * 0.12;
-            drawSpotlight(GAME_WIDTH, 80, angle2, 0.28, 480, whiteStart, whiteEnd);
-
-            // 3. 左下角副舞台投射燈 (白光 🤍)
-            const angle3 = -Math.PI * 0.3 + Math.cos(t * 0.8) * 0.15;
-            drawSpotlight(0, 500, angle3, 0.22, 400, 'rgba(255, 255, 255, 0.12)', whiteEnd);
-
-            // 4. 右下角副舞台投射燈 (白光 🤍)
-            const angle4 = -Math.PI * 0.7 + Math.cos(t * 0.9 + 2.0) * 0.15;
-            drawSpotlight(GAME_WIDTH, 500, angle4, 0.22, 400, 'rgba(255, 255, 255, 0.12)', whiteEnd);
-        }
-
-        function drawGame() {
-            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-            // 1. 繪製動態 3D Runway 舞台背景 + 清晨雲朵移動
-            drawStageBackground();
-
-            // 2. 繪製動態擺動的 4 束演唱會舞台聚光燈 (Spotlights)
-            drawConcertLights();
-
-            // 3. 繪製日式雙色霓虹燈招牌 VITO 0718
-            drawNeonSign();
+            // D. 🛠️ 舞台所有元素 (地板、跑道、射燈、桁架、霓虹招牌) 已乾淨移除
 
             // 4. 繪製主角（含派對帽、朝向翻轉邏輯）
             if (imgStatus.player) {
@@ -874,7 +566,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
-                        // 🛠️ 配合朝向渲染最穩定的派對帽定位！
+                        // 🛠️ 配合朝向渲染改過一次版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 } else {
@@ -882,7 +574,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
-                        // 🛠️ 配合朝向渲染最穩定的派對帽定位！
+                        // 🛠️ 配合朝向渲染改過一次版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 }
@@ -898,24 +590,7 @@
 
             // 5. 繪製掉落食物與地雷
             for (const item of items) {
-                // 如果掉落物是「🦵 護膝（地雷）」，在它正後方渲染一圈紅色的霓虹發光預警圈
-                if (item.typeIndex === 2) {
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'screen';
-                    
-                    // 呼吸動態半徑
-                    const glowRadius = 38 + Math.sin(Date.now() * 0.015) * 6;
-                    const rGrad = ctx.createRadialGradient(item.x, item.y, 10, item.x, item.y, glowRadius);
-                    rGrad.addColorStop(0, 'rgba(255, 42, 42, 0.7)');
-                    rGrad.addColorStop(0.4, 'rgba(255, 42, 42, 0.35)');
-                    rGrad.addColorStop(1, 'rgba(255, 42, 42, 0)');
-                    
-                    ctx.fillStyle = rGrad;
-                    ctx.beginPath();
-                    ctx.arc(item.x, item.y, glowRadius, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
+                // 🛠️ 護膝主體在藍天背景下已顯眼，移除紅色亮光效果
 
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
@@ -1028,7 +703,7 @@
 
             if (isWin) {
                 endTitle.innerText = "⭐ 718達成！⭐";
-                endTitle.style.color = "#ffe066";
+                endTitle.style.color = "#ff9f43";
                 endMsg.innerHTML = `肚子吃飽飽 😋！<br>不要忘記截圖此頁面參加抽獎 🎁<br><span style="font-size:14px;color:#00a8ff;display:block;margin-top:10px;">把滿滿的幸福送到浦洋手上啦 🍜💙</span>`;
             } else {
                 endTitle.innerText = "💀 遊戲結束";
