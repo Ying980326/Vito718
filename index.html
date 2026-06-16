@@ -115,7 +115,6 @@
                 <div class="rule-item">🍜 糊塗麵：+10分｜+5 ENERGY</div>
                 <div class="rule-item">🍖 炸排骨：+17分</div>
                 <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
-                <!-- 成功把「驚喜道具：」字樣移除，畫面更簡潔 -->
                 <div class="rule-item" style="color: #ffe066;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
                 <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.3); margin: 10px 0;">
                 <div class="rule-target">⭐ 目標：累積718分即可通關！</div>
@@ -227,8 +226,6 @@
         let isFeverMode = false;
         let feverTimeLeft = 0;
         let hasSpawnedCake = false; 
-        
-        let balloons = [];      // 儲存緩緩上升藍氣球
         let neonFlicker = 1;    // 招牌電流閃爍明亮度
 
         let isDragging = false;
@@ -288,7 +285,6 @@
             moveDirection = 0;
             isDragging = false;
             items = [];
-            balloons = [];
             
             isFeverMode = false;
             hasSpawnedCake = false;
@@ -305,11 +301,6 @@
             endScreen.classList.add('hide');
             gameActive = true;
 
-            // 產生幾顆初始背景藍氣球
-            for (let i = 0; i < 4; i++) {
-                spawnBalloon(Math.random() * GAME_HEIGHT);
-            }
-
             if (gameLoopId) cancelAnimationFrame(gameLoopId);
             if (spawnLoopId) clearInterval(spawnLoopId);
             if (timeBurnLoopId) clearInterval(timeBurnLoopId); 
@@ -324,9 +315,6 @@
                 if (hp <= 0) { hp = 0; endGame(false); }
                 hpBar.style.width = `${hp}%`;
                 hpText.innerText = `${hp} / 100`; 
-                
-                // 隨機在底部生成新的藍色慶生氣球
-                if (Math.random() < 0.6) spawnBalloon(GAME_HEIGHT + 50);
             }, 1000);
         }
 
@@ -338,7 +326,6 @@
             if (feverTimerId) clearInterval(feverTimerId);
             
             items = [];
-            balloons = [];
             score = 0;
             hp = 100;
             isFeverMode = false;
@@ -376,20 +363,6 @@
             }, 1000);
         }
 
-        // 產生藍色氣球
-        function spawnBalloon(startY) {
-            balloons.push({
-                x: Math.random() * (GAME_WIDTH - 60) + 30,
-                y: startY,
-                radius: Math.random() * 8 + 14,
-                speed: Math.random() * 0.8 + 0.6,
-                swingSpeed: Math.random() * 0.02 + 0.01,
-                swingRange: Math.random() * 20 + 10,
-                opacity: Math.random() * 0.25 + 0.35, // 半透明
-                angle: Math.random() * Math.PI
-            });
-        }
-
         function spawnItem() {
             if (!gameActive) return;
 
@@ -404,8 +377,8 @@
                     hp: 15, 
                     x: Math.random() * (GAME_WIDTH - 110) + 55, 
                     y: -100,
-                    width: 95, 
-                    height: 95,
+                    width: 75,  // 🛠️ 縮小碰撞體寬度，使判定更精確
+                    height: 75, // 🛠️ 縮小碰撞體高度
                     speed: 5
                 });
                 return;
@@ -454,16 +427,6 @@
 
             if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
             if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
-
-            // 更新背景氣球位置
-            for (let i = balloons.length - 1; i >= 0; i--) {
-                const b = balloons[i];
-                b.y -= b.speed;
-                b.angle += b.swingSpeed;
-                if (b.y < -50) {
-                    balloons.splice(i, 1);
-                }
-            }
 
             // 招牌電流微弱閃爍控制
             if (Math.random() < 0.04) {
@@ -523,10 +486,102 @@
             gameLoopId = requestAnimationFrame(updateGame);
         }
 
+        // 🛠️ 繪製帶有高精緻度圓角的輔助路徑函數
+        function pathRoundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        // 🛠️ 繪製精緻的復古壓克力吊牌霓虹招牌
+        function drawNeonSign() {
+            ctx.save();
+            
+            const signX = GAME_WIDTH / 2;
+            const signY = 135;
+            const signW = 240;
+            const signH = 80;
+
+            // 1. 繪製懸吊吊鏈 (工業鐵灰色金屬感)
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(signX - 90, signY - 40);
+            ctx.lineTo(signX - 45, signY - 80);
+            ctx.lineTo(signX + 45, signY - 80);
+            ctx.lineTo(signX + 90, signY - 40);
+            ctx.stroke();
+
+            // 2. 繪製精緻的深色半透明壓克力背板 (大幅提升文字在亮底下的對比與清晰度)
+            ctx.fillStyle = 'rgba(12, 17, 28, 0.82)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1.5;
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+            ctx.shadowBlur = 12;
+            ctx.shadowOffsetY = 6;
+            pathRoundRect(ctx, signX - signW/2, signY - signH/2, signW, signH, 16);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // 3. 繪製霓虹外框燈管 (亮粉紅脈動燈管效果，與電流同步)
+            ctx.save();
+            ctx.strokeStyle = '#ff0066'; // 外框霓虹粉色
+            ctx.lineWidth = 3.5;
+            ctx.shadowColor = '#ff0066';
+            ctx.shadowBlur = isFeverMode ? 22 : 12;
+            ctx.globalAlpha = neonFlicker * 0.85;
+            pathRoundRect(ctx, signX - signW/2 + 8, signY - signH/2 + 8, signW - 16, signH - 16, 11);
+            ctx.stroke();
+
+            // 外框白色燈管亮芯
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 3;
+            ctx.globalAlpha = neonFlicker;
+            pathRoundRect(ctx, signX - signW/2 + 8, signY - signH/2 + 8, signW - 16, signH - 16, 11);
+            ctx.stroke();
+            ctx.restore();
+
+            // 4. 繪製 "VITO 0718" 雙層立體發光字體 (浦洋藍 💙)
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // 浦洋藍發光字體層
+            ctx.font = 'bold 28px "Arial Black", Impact, sans-serif'; 
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 6;
+            ctx.shadowColor = '#00d2ff';
+            ctx.shadowBlur = isFeverMode ? 24 : 14;
+            ctx.globalAlpha = neonFlicker * 0.9;
+            ctx.strokeText('VITO 0718', signX, signY);
+
+            // 白色燈絲極致亮芯層
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 4;
+            ctx.globalAlpha = neonFlicker;
+            ctx.fillText('VITO 0718', signX, signY);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
         function drawGame() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 1. 繪製背景
+            // 1. 繪製背景圖
             if (imgStatus.bg) {
                 ctx.drawImage(bgImg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
             } else {
@@ -534,58 +589,10 @@
                 ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
             }
 
-            // 2. 繪製背景緩緩上升的藍氣球（半透明）
-            for (const b of balloons) {
-                ctx.save();
-                ctx.globalAlpha = b.opacity;
-                const drawX = b.x + Math.sin(b.angle) * b.swingRange;
-                
-                const grad = ctx.createRadialGradient(drawX - b.radius/3, b.y - b.radius/3, 1, drawX, b.y, b.radius);
-                grad.addColorStop(0, '#80d4ff');
-                grad.addColorStop(1, '#00a8ff');
-                ctx.fillStyle = grad;
-                
-                ctx.beginPath();
-                ctx.arc(drawX, b.y, b.radius, 0, Math.PI * 2);
-                ctx.fill();
+            // 2. 🛠️ 氣球上升邏輯已完全乾淨移除，畫面不再雜亂
 
-                ctx.fillStyle = '#0084cc';
-                ctx.beginPath();
-                ctx.moveTo(drawX, b.y + b.radius - 2);
-                ctx.lineTo(drawX - 5, b.y + b.radius + 6);
-                ctx.lineTo(drawX + 5, b.y + b.radius + 6);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.strokeStyle = '#00a8ff';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(drawX, b.y + b.radius + 6);
-                ctx.quadraticCurveTo(drawX - 5, b.y + b.radius + 18, drawX + 3, b.y + b.radius + 30);
-                ctx.stroke();
-
-                ctx.restore();
-            }
-
-            // 3. 繪製具有復古微弱電流閃爍感的 VITO 0718 霓虹招牌
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            ctx.font = 'bold 36px Arial';
-            ctx.strokeStyle = '#00a8ff';
-            ctx.lineWidth = 6;
-            ctx.shadowColor = '#00d2ff';
-            ctx.shadowBlur = 15;
-            ctx.globalAlpha = neonFlicker * 0.8; 
-            ctx.strokeText('VITO 0718', GAME_WIDTH / 2, 130);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 3;
-            ctx.shadowColor = '#ffffff';
-            ctx.globalAlpha = neonFlicker;
-            ctx.fillText('VITO 0718', GAME_WIDTH / 2, 130);
-            ctx.restore();
+            // 3. 🛠️ 繪製全新升級的壓克力吊鏈霓虹燈招牌
+            drawNeonSign();
 
             // 4. 繪製主角（含派對帽、朝向翻轉邏輯）
             if (imgStatus.player) {
@@ -622,10 +629,17 @@
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
-                    ctx.font = `80px Arial`;
+                    ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
+                    // 🛠️ 優化不同道具 Emoji 的比例：將過大的蛋糕限制在 55px，與其他道具等大
+                    if (item.typeIndex === 99) {
+                        ctx.font = `55px Arial`; 
+                    } else {
+                        ctx.font = `70px Arial`; 
+                    }
                     ctx.fillText(item.emoji, item.x, item.y);
+                    ctx.restore();
                 }
             }
         }
