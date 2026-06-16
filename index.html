@@ -14,7 +14,7 @@
             max-width: 480px; 
             height: 100vh; 
             max-height: 800px; 
-            background: #090615; 
+            background: #E0F6FF; 
             border-radius: 12px; 
             overflow: hidden; 
             box-shadow: 0 10px 35px rgba(0,0,0,0.85);
@@ -39,13 +39,27 @@
         
         canvas { display: block; width: 100%; height: 100%; image-rendering: -webkit-optimize-contrast; image-rendering: auto; }
         
-        #hud { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; color: #fff; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px #000; display: flex; justify-content: space-between; align-items: center; }
+        /* 提升 HUD 文字在亮色清晨背景下的可讀性 */
+        #hud { 
+            position: absolute; 
+            top: 15px; 
+            left: 15px; 
+            right: 15px; 
+            z-index: 10; 
+            color: #fff; 
+            font-size: 16px; 
+            font-weight: bold; 
+            text-shadow: 1px 1px 3px #000, -1px -1px 3px #000, 1px -1px 3px #000, -1px 1px 3px #000; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
         
         #fever-text { color: #ff3f34; font-weight: 900; background: rgba(255, 224, 102, 0.9); padding: 4px 10px; border-radius: 5px; box-shadow: 0 0 8px #ffe066; display: none; font-size: 13px; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         #hp-container-wrapper { display: flex; align-items: center; }
-        #hp-bar-container { position: relative; width: 100px; height: 22px; background: rgba(50, 50, 50, 0.6); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #ff4d4d; }
+        #hp-bar-container { position: relative; width: 100px; height: 22px; background: rgba(0, 0, 0, 0.4); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #ff4d4d; }
         #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff7675); transition: width 0.1s ease; }
         
         #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 12px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
@@ -175,9 +189,9 @@
         const ITEM_RIBS_URL    = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/rib.png';
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
 
-        // 🛠️ 派對帽微調參數：已依要求調為往左 24 像素、往下 32 像素，戴起來更萌更端正！
-        const HAT_OFFSET_X = -24;   // 派對帽左右偏移（正數往右，負數往左）
-        const HAT_OFFSET_Y = 32;   // 派對帽上下偏移（正數往下壓，負數往上飄）
+        // 🛠️ 派對帽微調參數：已恢復上一版最完美的偏移位置！
+        const HAT_OFFSET_X = 0;   // 派對帽左右偏移（正數往右，負數往左）
+        const HAT_OFFSET_Y = 15;   // 派對帽上下偏移（正數往下壓，負數往上飄）
         // ==========================================
 
         let imgStatus = { bg: false, player: false, noodle: false, ribs: false, kneepad: false };
@@ -227,6 +241,9 @@
         let feverTimeLeft = 0;
         let hasSpawnedCake = false; 
         let neonFlicker = 1;    // 招牌電流閃爍明亮度
+        
+        // 🛠️ 清晨雲朵資料
+        let clouds = [];
 
         let isDragging = false;
         let lastTouchX = 0;
@@ -292,6 +309,13 @@
             feverText.style.display = 'none';
             gameWrapper.classList.remove('fever-active');
 
+            // 🛠️ 初始化清晨背景中緩緩移動的半透明白雲 (限定在螢幕頂部 1/3)
+            clouds = [
+                { x: 30, y: 50, scale: 0.9, speed: 0.12, opacity: 0.42 },
+                { x: 180, y: 110, scale: 1.2, speed: 0.08, opacity: 0.55 },
+                { x: 340, y: 70, scale: 0.7, speed: 0.15, opacity: 0.38 }
+            ];
+
             scoreText.innerText = score;
             hpBar.style.width = '100%';
             hpText.innerText = '100 / 100'; 
@@ -326,6 +350,7 @@
             if (feverTimerId) clearInterval(feverTimerId);
             
             items = [];
+            clouds = [];
             score = 0;
             hp = 100;
             isFeverMode = false;
@@ -433,6 +458,18 @@
                 neonFlicker = Math.min(1.0, neonFlicker + 0.1); 
             }
 
+            // 🛠️ 更新雲朵緩緩飄移邏輯 (橫跨螢幕後重置並於頂部 1/3 隨機 y 軸再現)
+            for (let i = 0; i < clouds.length; i++) {
+                const c = clouds[i];
+                c.x += c.speed;
+                if (c.x > GAME_WIDTH + 80) {
+                    c.x = -80;
+                    c.y = Math.random() * 120 + 30; // 嚴格控制在螢幕頂部 1/3
+                    c.speed = Math.random() * 0.06 + 0.06;
+                    c.opacity = Math.random() * 0.2 + 0.35;
+                }
+            }
+
             for (let i = items.length - 1; i >= 0; i--) {
                 const item = items[i];
                 item.y += item.speed;
@@ -507,7 +544,7 @@
             const signH = 88; // 稍微拉高容納副標題
 
             // 1. 繪製精緻雙吊掛金屬鏈
-            ctx.strokeStyle = '#222';
+            ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(signX - 90, signY - 44);
@@ -613,27 +650,49 @@
         }
 
         function drawStageBackground() {
-            // A. 背景漸層 (演唱會暗紫色基調)
+            // A. 🛠️ 改回清晨粉藍色的美麗天空漸層背景
             const skyGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-            skyGrad.addColorStop(0, '#04020c');
-            skyGrad.addColorStop(0.4, '#0e081e');
-            skyGrad.addColorStop(1, '#15092a');
+            skyGrad.addColorStop(0, '#a1c4fd');   // 粉藍色
+            skyGrad.addColorStop(0.65, '#c2e9fb'); // 柔美淺藍
+            skyGrad.addColorStop(1, '#fbc2eb');   // 晨曦地平線粉紫色
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // B. 如果有上傳背景圖，則以半透明層疊，保留其紋理並融入舞台中
+            // B. 🛠️ 繪製背景頂部 1/3 的慢速移動半透明白雲 (真實天空感)
+            ctx.save();
+            for (const c of clouds) {
+                ctx.globalAlpha = c.opacity;
+                ctx.fillStyle = '#ffffff';
+                
+                const cx = c.x;
+                const cy = c.y;
+                const r = 16 * c.scale;
+                
+                // 向量曲線繪製蓬鬆手繪風雲朵
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.arc(cx + r * 0.8, cy - r * 0.4, r * 0.8, 0, Math.PI * 2);
+                ctx.arc(cx - r * 0.8, cy - r * 0.3, r * 0.7, 0, Math.PI * 2);
+                ctx.arc(cx + r * 1.5, cy + r * 0.1, r * 0.6, 0, Math.PI * 2);
+                ctx.arc(cx - r * 1.4, cy + r * 0.1, r * 0.6, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // C. 🛠️ 結合有上傳的背景圖 (以極細微半透明層疊，保留細節又不破壞清晨美感)
             if (imgStatus.bg) {
                 ctx.save();
-                ctx.globalAlpha = 0.35; // 35% 混色
+                ctx.globalAlpha = 0.22; 
                 ctx.drawImage(bgImg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
                 ctx.restore();
             }
 
-            // C. 繪製 3D 空間舞台地板 (從 y=350 開始向下無限延伸)
+            // D. 繪製 3D 空間舞台地板 (從 y=350 開始向下無限延伸)
             const horizonY = 350;
             const floorGrad = ctx.createLinearGradient(0, horizonY, 0, GAME_HEIGHT);
-            floorGrad.addColorStop(0, '#0a0515');
-            floorGrad.addColorStop(1, '#050209');
+            floorGrad.addColorStop(0, 'rgba(15, 12, 35, 0.85)');
+            floorGrad.addColorStop(1, 'rgba(8, 5, 20, 0.95)');
             
             ctx.save();
             ctx.fillStyle = floorGrad;
@@ -646,7 +705,7 @@
             ctx.fill();
 
             // 地板亮漆 3D 縱向反光格線
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
             ctx.lineWidth = 1;
             for (let i = -100; i <= GAME_WIDTH + 100; i += 50) {
                 ctx.beginPath();
@@ -663,17 +722,16 @@
             }
             ctx.restore();
 
-            // D. 🛠️ 繪製更寬敞氣派的巨型「Runway 璀璨星光大道」
+            // E. 繪製寬敞大器的巨型「Runway 璀璨星光大道」
             ctx.save();
-            // 拓寬跑道區域
             const roadLeftBottom = -80;
             const roadRightBottom = GAME_WIDTH + 80;
-            const roadLeftTop = GAME_WIDTH / 2 - 120; // 🛠️ 大幅拓寬頂部 Runway (原為 -45)
-            const roadRightTop = GAME_WIDTH / 2 + 120; // 🛠️ 大幅拓寬頂部 Runway (原為 +45)
+            const roadLeftTop = GAME_WIDTH / 2 - 120; // 寬敞 Runway 頂端
+            const roadRightTop = GAME_WIDTH / 2 + 120; // 寬敞 Runway 頂端
 
             const rGrad = ctx.createLinearGradient(0, horizonY, 0, GAME_HEIGHT);
-            rGrad.addColorStop(0, 'rgba(18, 12, 38, 0.95)');
-            rGrad.addColorStop(1, 'rgba(10, 6, 22, 0.98)');
+            rGrad.addColorStop(0, 'rgba(26, 21, 56, 0.92)');
+            rGrad.addColorStop(1, 'rgba(14, 10, 32, 0.96)');
             ctx.fillStyle = rGrad;
             ctx.beginPath();
             ctx.moveTo(roadLeftTop, horizonY);
@@ -683,14 +741,10 @@
             ctx.closePath();
             ctx.fill();
 
-            // 🛠️ 移除原有的藍/粉色邊緣以及虛線
-
-            // 🛠️ 新增：沿著 Runway 兩側邊緣繪製白色地板投射地燈與光束
+            // F. 沿著 Runway 兩側邊緣繪製白色地板投射地燈與光束
             const numGroundLights = 3;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
             for (let i = 0; i < numGroundLights; i++) {
                 const ratio = i / (numGroundLights - 1);
-                // 透視插值計算兩側地燈座標
                 const lx = roadLeftTop + (roadLeftBottom - roadLeftTop) * ratio;
                 const rx = roadRightTop + (roadRightBottom - roadRightTop) * ratio;
                 const ly = horizonY + (GAME_HEIGHT - horizonY) * ratio;
@@ -711,7 +765,7 @@
                 ctx.globalCompositeOperation = 'screen';
                 const lightLength = 120 + ratio * 80;
                 const beamGrad = ctx.createLinearGradient(0, ly, 0, ly - lightLength);
-                beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+                beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
                 beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 ctx.fillStyle = beamGrad;
 
@@ -735,9 +789,9 @@
 
             ctx.restore();
 
-            // E. 兩側演唱會金屬桁架結構 (Truss)
+            // G. 兩側演唱會金屬桁架結構 (Truss)
             ctx.save();
-            ctx.strokeStyle = 'rgba(60, 60, 85, 0.35)';
+            ctx.strokeStyle = 'rgba(80, 80, 110, 0.4)';
             ctx.lineWidth = 2.5;
             // 左側架子
             ctx.beginPath();
@@ -777,7 +831,7 @@
         function drawConcertLights() {
             const t = Date.now() * 0.0012; // 時間變量，用於物理波動擺動
 
-            // 🛠️ 將所有角落舞台射燈全部統一調整為「璀璨白光」，更有日系極簡與現代感！
+            // 所有角落舞台射燈全部統一調整為「璀璨白光」
             const whiteStart = 'rgba(255, 255, 255, 0.22)';
             const whiteEnd = 'rgba(255, 255, 255, 0)';
 
@@ -801,7 +855,7 @@
         function drawGame() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 1. 繪製動態 3D Runway 舞台背景
+            // 1. 繪製動態 3D Runway 舞台背景 + 清晨雲朵移動
             drawStageBackground();
 
             // 2. 繪製動態擺動的 4 束演唱會舞台聚光燈 (Spotlights)
@@ -820,6 +874,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
+                        // 🛠️ 配合朝向渲染最穩定的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 } else {
@@ -827,6 +882,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
+                        // 🛠️ 配合朝向渲染最穩定的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 }
@@ -842,7 +898,7 @@
 
             // 5. 繪製掉落食物與地雷
             for (const item of items) {
-                // 🛠️ 核心功能修正：如果掉落物是「🦵 護膝（地雷）」，在它正後方渲染一圈紅色的霓虹發光預警圈！
+                // 如果掉落物是「🦵 護膝（地雷）」，在它正後方渲染一圈紅色的霓虹發光預警圈
                 if (item.typeIndex === 2) {
                     ctx.save();
                     ctx.globalCompositeOperation = 'screen';
@@ -867,7 +923,7 @@
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    // 🎂 精準等比例尺寸：將蛋糕 Emoji 限制在視覺上與其他等大的 55px
+                    // 🎂 精準等比例尺寸：將蛋糕 Emoji 限制在視覺上與其他等大的 55px 
                     if (item.typeIndex === 99) {
                         ctx.font = `55px Arial`; 
                     } else {
@@ -879,7 +935,7 @@
             }
         }
 
-        // 🛠️ 重新設計成超萌手繪 Q 版「蓬蓬波點生日派對帽」
+        // 超萌手繪 Q 版「蓬蓬波點生日派對帽」
         function drawPartyHat(x, y) {
             ctx.save();
             ctx.translate(x, y);
@@ -915,7 +971,7 @@
             ctx.closePath();
             ctx.fill();
 
-            // 3. 繪製帽身上的可愛糖果波波點與粉藍斜斑紋 (Cuteness Overload)
+            // 3. 繪製帽身上的可愛糖果波波點與粉藍斜斑紋
             ctx.save();
             // 剪裁路徑，只繪製在帽體內部
             ctx.beginPath();
