@@ -516,7 +516,7 @@
         function drawGame() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // A. 🛠️ 改回清晨粉藍色的美麗天空漸層背景（已拿掉粉紅色漸層，僅保留溫和明亮的純藍天漸層）
+            // A. 改回清晨粉藍色的美麗天空漸層背景（已拿掉粉紅色漸層，僅保留溫和明亮的純藍天漸層）
             const skyGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
             skyGrad.addColorStop(0, '#81d4ff');   // 柔和天藍
             skyGrad.addColorStop(0.7, '#bfe9ff'); // 淺水藍
@@ -566,7 +566,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
-                        // 🛠️ 配合朝向渲染改過一次且往下微調版本的派對帽定位！
+                        // 配合朝向渲染改過一次且往下微調版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 } else {
@@ -574,14 +574,15 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
-                        // 🛠️ 配合朝向渲染改過一次且往下微調版本的派對帽定位！
+                        // 配合朝向渲染改過一次且往下微調版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 }
                 ctx.restore(); 
             } else {
                 ctx.save();
-                ctx.font = `120px Arial`;
+                // 🛠️ 修正手機瀏覽器對於 Canvas 文字 Emoji 的字型相容性，強制引入彩色 Emoji 字型鏈
+                ctx.font = `120px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif, Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(player.facing === 'right' ? '👉' : '🐱', player.x, player.y);
@@ -598,11 +599,12 @@
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    // 🎂 精準等比例尺寸：將蛋糕 Emoji 限制在視覺上與其他等大的 55px 
+                    // 🎂 精準等比例尺寸且修正手機 Emoji 顯示問題：
+                    // 改用手機原生 Emoji 字型鏈（"Apple Color Emoji", "Segoe UI Emoji"...），不使用會把 Emoji 卡死的純 Arial
                     if (item.typeIndex === 99) {
-                        ctx.font = `55px Arial`; 
+                        ctx.font = `55px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif, Arial`; 
                     } else {
-                        ctx.font = `70px Arial`; 
+                        ctx.font = `70px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif, Arial`; 
                     }
                     ctx.fillText(item.emoji, item.x, item.y);
                     ctx.restore();
