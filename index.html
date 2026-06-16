@@ -28,8 +28,20 @@
         .screen p { font-size: 18px; margin-bottom: 40px; line-height: 1.6; }
         .screen b { color: #ffbc00; }
         
-        .screen button { position: relative; z-index: 35; padding: 15px 40px; font-size: 22px; font-weight: bold; background: #4cd137; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); -webkit-tap-highlight-color: transparent; }
-        .screen button:active { transform: translateY(2px); background: #44bd32; }
+        /* 按鈕樣式包裝與調整 */
+        .btn-group { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 260px; }
+        .screen button { position: relative; z-index: 35; padding: 15px 30px; font-size: 20px; font-weight: bold; color: white; border: none; border-radius: 30px; cursor: pointer; -webkit-tap-highlight-color: transparent; width: 100%; }
+        
+        #start-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
+        #start-btn:active { background: #44bd32; transform: translateY(2px); }
+        
+        #restart-btn { background: #4cd137; box-shadow: 0 5px 20px rgba(76, 209, 55, 0.5); }
+        #restart-btn:active { background: #44bd32; transform: translateY(2px); }
+        
+        /* 🛠️ 新增的回到首頁按鈕藍色風格 */
+        #home-btn { background: #00a8ff; box-shadow: 0 5px 20px rgba(0, 168, 255, 0.5); }
+        #home-btn:active { background: #0097e6; transform: translateY(2px); }
+        
         .hide { display: none !important; }
     </style>
 </head>
@@ -62,13 +74,18 @@
                電腦：使用 鍵盤 ← → 方向鍵移動<br>
                手機：點擊螢幕 左半邊 或 右半邊 移動
             </p>
-            <button id="start-btn">開始遊戲</button>
+            <div class="btn-group">
+                <button id="start-btn">開始遊戲</button>
+            </div>
         </div>
 
         <div id="end-screen" class="screen hide">
             <h1 id="end-title">遊戲結束</h1>
             <p id="end-msg"></p>
-            <button id="restart-btn">再玩一次</button>
+            <div class="btn-group">
+                <button id="restart-btn">再玩一次</button>
+                <button id="home-btn">回到首頁</button>
+            </div>
         </div>
     </div>
 
@@ -83,6 +100,8 @@
         const endTitle = document.getElementById('end-title');
         const endMsg = document.getElementById('end-msg');
         const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const homeBtn = document.getElementById('home-btn'); // 🛠️ 綁定新按鈕
 
         const GAME_WIDTH = 480;
         const GAME_HEIGHT = 800;
@@ -152,7 +171,10 @@
         let items = [];
 
         startBtn.addEventListener('click', startGame);
-        document.getElementById('restart-btn').addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        
+        // 🛠️ 監聽回到首頁按鈕的點擊事件
+        homeBtn.addEventListener('click', backToHome);
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; }   
@@ -203,6 +225,29 @@
                 hpBar.style.width = `${hp}%`;
                 hpText.innerText = `${hp} / 100`; 
             }, 1000);
+        }
+
+        // 🛠️ 回到首頁的功能邏輯
+        function backToHome() {
+            gameActive = false;
+            // 清除可能還在跑的計時器，徹底重置狀態
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            if (spawnLoopId) clearInterval(spawnLoopId);
+            if (timeBurnLoopId) clearInterval(timeBurnLoopId);
+            
+            items = [];
+            score = 0;
+            hp = 100;
+            scoreText.innerText = score;
+            hpBar.style.width = '100%';
+            hpText.innerText = '100 / 100';
+
+            // 重新繪製一張乾淨的初始畫面
+            drawGame();
+
+            // 切換畫面顯示：藏起結束畫面，顯示首頁說明畫面
+            endScreen.classList.add('hide');
+            startScreen.classList.remove('hide');
         }
 
         function spawnItem() {
@@ -337,7 +382,6 @@
             clearInterval(timeBurnLoopId); 
 
             if (isWin) {
-                // 🛠️ 專屬勝利畫面文案修改
                 endTitle.innerText = "🎉 恭喜通關！";
                 endTitle.style.color = "#4cd137";
                 endMsg.innerHTML = `成功收集 718 分！<br>把滿滿的幸福送到浦洋手上啦 🍜💙`;
