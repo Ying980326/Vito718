@@ -261,31 +261,66 @@
         let lastTouchX = 0;
 
         // ==========================================
-        // 🎵 Web Audio API 復古 8-bit 電子音樂合成器
+        // 🎵 Web Audio API 復古 8-bit 進階多聲部合成器
         // ==========================================
         const audioHelper = {
             ctx: null,
             muted: false,
             bgmTimer: null,
             step: 0,
+            noiseBuffer: null, // 用於合成打擊樂小鼓（Snare）
+
+            // 1. 和弦根音進行 (Chord Roots for C - G - Am - F)
+            roots: [130.81, 97.99, 110.00, 87.31], // C3, G2, A2, F2
             
-            // 輕快清晨 8-bit 背景旋律 (三角波)
-            melody: [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23], // C4, E4, G4, E4, D4, F4, A4, F4
-            // 生日模式超嗨加速音調 (方波)
-            feverMelody: [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880.00, 698.46], // C5, E5, G5, E5, D5, F5, A5, F5
+            // 2. 清晨主旋律：16分音符，極具起伏與空氣感（適配 C - G - Am - F 進行）
+            melody: [
+                329.63, 0, 392.00, 523.25, // C Major 段：E4, 0, G4, C5
+                293.66, 0, 392.00, 587.33, // G Major 段：D4, 0, G4, D5
+                440.00, 0, 523.25, 659.25, // A Minor 段：A4, 0, C5, E5
+                349.23, 392.00, 440.00, 523.25 // F Major 段：F4, G4, A4, C5
+            ],
+
+            // 3. 🎂 生日狂熱模式主旋律：歡樂喜慶的 8-bit 生日歌快切變奏旋律 (方波)
+            feverMelody: [
+                523.25, 523.25, 587.33, 523.25, 698.46, 659.25, 0, 0, // C5 C5 D5 C5 F5 E5
+                523.25, 523.25, 587.33, 523.25, 783.99, 698.46, 0, 0  // C5 C5 D5 C5 G5 F5
+            ],
 
             init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.createNoiseBuffer(); // 預先生成模擬鼓聲的白噪音
                 }
                 if (this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
             },
+
+            // 產生白噪音緩衝（用於架子鼓與敲擊樂音效）
+            createNoiseBuffer() {
+                if (!this.ctx) return null;
+                const bufferSize = this.ctx.sampleRate * 0.4;
+                const buffer = this.ctx.createBuffer(1, bufferWidth = bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                return buffer;
+            },
+
+            createNoiseBuffer() {
+                const bufferSize = this.ctx.sampleRate * 0.15;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                this.noiseBuffer = buffer;
+            },
             
-            playTone(freq, type, duration, volume = 0.1) {
+            playTone(freq, type, duration, volume = 0.1, startTime = 0) {
                 if (this.muted || !this.ctx) return;
-                this.init();
                 
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -293,20 +328,75 @@
                 osc.type = type;
                 osc.frequency.value = freq;
                 
-                // 平滑淡入淡出，防止雜音
-                gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(volume, this.ctx.currentTime + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0.001, startTime + this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(volume, startTime + this.ctx.currentTime + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, startTime + this.ctx.currentTime + duration);
                 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
+                osc.start(startTime + this.ctx.currentTime);
+                osc.stop(startTime + this.ctx.currentTime + duration);
+            },
+
+            // 合成 8-bit 模擬大鼓聲 (Bass Drum sfx)
+            playKick(startTime = 0) {
+                if (this.muted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, startTime + this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(45, startTime + this.ctx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.18, startTime + this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, startTime + this.ctx.currentTime + 0.12);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(startTime + this.ctx.currentTime);
+                osc.stop(startTime + this.ctx.currentTime + 0.12);
+            },
+
+            // 合成 8-bit 模擬小鼓聲 (Snare Drum sfx)
+            playSnare(startTime = 0) {
+                if (this.muted || !this.ctx || !this.noiseBuffer) return;
+                
+                // 噪音源（打擊擦音）
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = this.noiseBuffer;
+                
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 1000;
+                
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.07, startTime + this.ctx.currentTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, startTime + this.ctx.currentTime + 0.12);
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(this.ctx.destination);
+                
+                // 三角波基音（打擊本體）
+                const osc = this.ctx.createOscillator();
+                const oscGain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, startTime + this.ctx.currentTime);
+                oscGain.gain.setValueAtTime(0.07, startTime + this.ctx.currentTime);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, startTime + this.ctx.currentTime + 0.1);
+                
+                osc.connect(oscGain);
+                oscGain.connect(this.ctx.destination);
+                
+                noise.start(startTime + this.ctx.currentTime);
+                osc.start(startTime + this.ctx.currentTime);
+                noise.stop(startTime + this.ctx.currentTime + 0.12);
+                osc.stop(startTime + this.ctx.currentTime + 0.12);
             },
             
             playEat() {
-                this.playTone(523.25, 'sine', 0.1, 0.15); // 清脆高音 C
+                this.playTone(523.25, 'sine', 0.1, 0.15); // 清脆高音 C5
                 setTimeout(() => this.playTone(659.25, 'sine', 0.15, 0.15), 50); // E5
             },
             
@@ -318,7 +408,7 @@
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(150, this.ctx.currentTime);
                 osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
                 gain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.3);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
@@ -327,46 +417,82 @@
             },
             
             playFeverStart() {
-                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // 上行琶音
+                const notes = [329.63, 392.00, 523.25, 659.25, 783.99, 1046.50]; // 琶音 C Major 7
                 notes.forEach((note, index) => {
                     setTimeout(() => {
-                        this.playTone(note, 'triangle', 0.2, 0.12);
-                    }, index * 80);
+                        this.playTone(note, 'triangle', 0.25, 0.12);
+                    }, index * 60);
                 });
             },
             
             playWin() {
-                const notes = [523.25, 659.25, 783.99, 1046.50]; // 勝利上揚和弦
+                const notes = [523.25, 659.25, 783.99, 1046.50]; 
                 notes.forEach((note, index) => {
                     setTimeout(() => {
                         this.playTone(note, 'square', 0.3, 0.08);
-                    }, index * 150);
+                    }, index * 120);
                 });
             },
             
             playLose() {
-                const notes = [392.00, 349.23, 311.13, 261.63]; // 失敗下行降調
+                const notes = [392.00, 349.23, 311.13, 261.63]; 
                 notes.forEach((note, index) => {
                     setTimeout(() => {
-                        this.playTone(note, 'sawtooth', 0.4, 0.08);
-                    }, index * 180);
+                        this.playTone(note, 'sawtooth', 0.35, 0.08);
+                    }, index * 150);
                 });
             },
             
             startBGM() {
                 this.stopBGM();
+                
                 const runBGMStep = () => {
                     if (!gameActive) return;
+                    this.init();
+
+                    const speedFactor = isFeverMode ? 1.4 : 1.0;
+                    const stepDur = (180 / speedFactor); // 基本每步的時間間隔 (ms)
+
+                    // ----------------------------------------------------
+                    // 1. 【啟程層次】：播放旋律軌 (Melody Track) - 任何分數皆播放
+                    // ----------------------------------------------------
                     const currentMelody = isFeverMode ? this.feverMelody : this.melody;
-                    const note = currentMelody[this.step % currentMelody.length];
-                    const type = isFeverMode ? 'square' : 'triangle';
-                    const currentVol = isFeverMode ? 0.03 : 0.06;
-                    this.playTone(note, type, isFeverMode ? 0.12 : 0.22, currentVol);
+                    const melNote = currentMelody[this.step % currentMelody.length];
+                    if (melNote > 0) {
+                        const waveType = isFeverMode ? 'square' : 'triangle';
+                        const vol = isFeverMode ? 0.025 : 0.055;
+                        this.playTone(melNote, waveType, (stepDur / 1000) * 1.5, vol);
+                    }
+
+                    // ----------------------------------------------------
+                    // 2. 【進化層次：SCORE >= 100 或狂熱】：播放低音軌 (Bass Track)
+                    // ----------------------------------------------------
+                    if (score >= 100 || isFeverMode) {
+                        // 算出當前處於 16 步和弦進行中的哪一個和弦 (每 4 步換一個和弦根音)
+                        const chordIndex = Math.floor((this.step % 16) / 4);
+                        const rootFreq = this.roots[chordIndex];
+                        
+                        // 低音律動：在步數的第 0, 2 步上播放
+                        if (this.step % 2 === 0) {
+                            const bassVol = isFeverMode ? 0.04 : 0.055;
+                            this.playTone(rootFreq, 'sine', (stepDur / 1000) * 1.8, bassVol);
+                        }
+                    }
+
+                    // ----------------------------------------------------
+                    // 3. 【極致進化層次：SCORE >= 200 或狂熱】：播放節奏鼓點軌 (Drums Track)
+                    // ----------------------------------------------------
+                    if (score >= 200 || isFeverMode) {
+                        const beatIndex = this.step % 4;
+                        if (beatIndex === 0) {
+                            this.playKick(); // 每拍第一拍：大鼓
+                        } else if (beatIndex === 2) {
+                            this.playSnare(); // 每拍第三拍：小鼓
+                        }
+                    }
+
                     this.step++;
-                    
-                    // 生日模式會自動加速節奏！
-                    const currentTempo = isFeverMode ? 140 : 280;
-                    this.bgmTimer = setTimeout(runBGMStep, currentTempo);
+                    this.bgmTimer = setTimeout(runBGMStep, stepDur);
                 };
                 runBGMStep();
             },
@@ -820,6 +946,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
+                        // 配合朝向渲染改過一次且往下微調版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 } else {
@@ -827,6 +954,7 @@
                     ctx.drawImage(playerImg, -player.width / 2, -player.height / 2, player.width, player.height);
                     
                     if (isFeverMode) {
+                        // 配合朝向渲染改過一次且往下微調版本的派對帽定位！
                         drawPartyHat(HAT_OFFSET_X, -player.height / 2 + HAT_OFFSET_Y);
                     }
                 }
