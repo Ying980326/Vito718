@@ -17,7 +17,7 @@
             background: #E0F6FF; 
             border-radius: 12px; 
             overflow: hidden; 
-            box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.15);
             border: 3px solid transparent;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
@@ -45,7 +45,7 @@
             left: 15px; 
             right: 15px; 
             z-index: 10; 
-            color: #333; 
+            color: #2c3e50; 
             font-size: 16px; 
             font-weight: bold; 
             text-shadow: 1px 1px 1px #fff; 
@@ -57,34 +57,81 @@
         #fever-text { color: #ff3f34; font-weight: 900; background: rgba(255, 224, 102, 0.9); padding: 4px 10px; border-radius: 5px; box-shadow: 0 0 8px #ffe066; display: none; font-size: 13px; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        #hp-container-wrapper { display: flex; align-items: center; }
-        #hp-bar-container { position: relative; width: 100px; height: 22px; background: rgba(200, 200, 200, 0.6); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; border: 1.5px solid #555; }
-        #hp-bar { width: 100%; height: 100%; background: #ff4d4d; transition: width 0.1s ease; }
+        #hp-container-wrapper { display: flex; align-items: center; font-size: 14px; color: #2c3e50; transition: color 0.2s; }
+        #hp-bar-container { position: relative; width: 95px; height: 22px; background: rgba(0, 0, 0, 0.15); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 4px; border: 1.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #2ecc71, #26de81); transition: width 0.1s ease; }
         
-        #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 12px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px #000; z-index: 12; }
+        /* 體力危急時紅光閃爍與輕微顫抖動畫 */
+        #hp-container-wrapper.danger-hp {
+            color: #d63031;
+            animation: dangerBlink 0.6s infinite alternate, shakeHp 0.15s infinite;
+        }
+        #hp-container-wrapper.danger-hp #hp-bar {
+            background: linear-gradient(90deg, #ff4d4d, #ff7675) !important;
+        }
+        #hp-container-wrapper.danger-hp #hp-bar-container {
+            border-color: #ff4d4d;
+        }
+        @keyframes dangerBlink {
+            0% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        @keyframes shakeHp {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-0.5px, 0.5px); }
+            75% { transform: translate(0.5px, -0.5px); }
+        }
         
-        /* 🔇 靜音按鈕樣式 */
+        #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 11px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); z-index: 12; }
+        
+        /* 🛠️ HUD 靜音按鈕美化成像素立體風 */
         #mute-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
             cursor: pointer;
-            padding: 0 4px;
-            margin-right: 6px;
+            padding: 3px 6px;
+            margin-left: 8px;
+            box-shadow: 0 2px 0 #bbb;
+            transition: transform 0.05s, box-shadow 0.05s;
             -webkit-tap-highlight-color: transparent;
         }
+        #mute-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 0px 0 #bbb;
+        }
 
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 246, 255, 0.95); color: #333; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 25px; }
-        .screen h1 { font-size: 34px; margin-bottom: 20px; color: #ff9f43; line-height: 1.3; text-shadow: 1px 1px 2px #fff; }
-        .screen p { font-size: 19px; margin-bottom: 35px; line-height: 1.8; color: #555; }
-        .screen b { color: #e056fd; }
+        /* 🛠️ 日系精緻乳白毛玻璃面板 */
+        .screen { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255, 255, 255, 0.88); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #005691; /* 優雅日系深藍 */
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 30; 
+            text-align: center; 
+            padding: 25px; 
+            transition: opacity 0.3s ease;
+        }
+        .screen h1 { font-size: 34px; margin-bottom: 20px; color: #ff9f43; line-height: 1.3; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
+        .screen p { font-size: 17px; margin-bottom: 30px; line-height: 1.8; color: #2c3e50; }
+        .screen b { color: #ff9f43; font-weight: bold; }
         
-        .rule-list { text-align: left; background: rgba(255,255,255,0.6); padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
-        .rule-item { font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; line-height: 1.5; color: #444; }
+        .rule-list { text-align: left; background: rgba(255, 255, 255, 0.7); padding: 18px; border-radius: 12px; margin-bottom: 25px; border: 1.5px solid rgba(0, 86, 145, 0.15); width: 100%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .rule-item { font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; line-height: 1.5; color: #2c3e50; }
         .rule-item:last-child { margin-bottom: 0; }
-        .rule-target { font-size: 17px; color: #ff9f43; font-weight: bold; margin-top: 10px; text-align: center; text-shadow: 1px 1px 1px #fff; }
+        .rule-target { font-size: 17px; color: #ff9f43; font-weight: bold; margin-top: 10px; text-align: center; }
         
-        .control-guide { font-size: 13px; color: #666; text-align: center; line-height: 1.6; margin-top: 10px; background: rgba(255,255,255,0.8); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); }
+        .control-guide { font-size: 13px; color: #555; text-align: center; line-height: 1.6; margin-top: 12px; background: rgba(255, 255, 255, 0.9); padding: 8px; border-radius: 8px; border: 1px dashed rgba(0, 86, 145, 0.25); }
 
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 260px; }
         .screen button { position: relative; z-index: 35; padding: 15px 30px; font-size: 20px; font-weight: bold; color: white; border: none; border-radius: 30px; cursor: pointer; -webkit-tap-highlight-color: transparent; width: 100%; }
@@ -110,19 +157,21 @@
         <div id="hud">
             <div>SCORE: <span id="score-text">0</span>/718</div>
             <div id="fever-text">🎂 生日模式 5s</div>
+            <!-- 🛠️ HP 區域包裹層，便於觸發紅色危急警告閃爍與抖動 -->
             <div id="hp-container-wrapper">
-                <!-- 🔇 靜音按鈕實裝在 HUD 中 -->
-                <button id="mute-btn">🔊</button>
-                ENERGY: 
+                ❤️ ENERGY: 
                 <div id="hp-bar-container">
                     <div id="hp-bar"></div>
                     <div id="hp-text">100/100</div>
                 </div>
+                <!-- 🔇 靜音按鈕美化排在 HUD 最右側 -->
+                <button id="mute-btn">🔊</button>
             </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
+        <!-- 🛠️ 所有面板皆換上優雅細緻的乳白毛玻璃色調與日系深藍文字 -->
         <div id="start-screen" class="screen">
             <h1>糊塗麵大作戰 ⚔️</h1>
             <p>
@@ -141,8 +190,8 @@
                 <div class="rule-item">🍜 糊塗麵：+10分｜+5 ENERGY</div>
                 <div class="rule-item">🍖 炸排骨：+17分</div>
                 <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
-                <div class="rule-item" style="color: #e056fd; font-weight: bold;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
-                <hr style="border: 0; border-top: 1px dashed rgba(0,0,0,0.1); margin: 10px 0;">
+                <div class="rule-item" style="color: #ff9f43; font-weight: bold;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
+                <hr style="border: 0; border-top: 1px dashed rgba(0, 86, 145, 0.2); margin: 10px 0;">
                 <div class="rule-target">⭐ 目標：累積718分即可通關！</div>
                 
                 <div class="control-guide">
@@ -171,6 +220,7 @@
         const scoreText = document.getElementById('score-text');
         const hpBar = document.getElementById('hp-bar');
         const hpText = document.getElementById('hp-text');
+        const hpContainerWrapper = document.getElementById('hp-container-wrapper');
         const feverText = document.getElementById('fever-text'); 
         const gameWrapper = document.getElementById('game-wrapper');
         const startScreen = document.getElementById('start-screen');
@@ -202,7 +252,7 @@
         const ITEM_RIBS_URL    = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/rib.png';
         const ITEM_KNEEPAD_URL = 'https://raw.githubusercontent.com/Ying980326/Vito718/main/knee.png';
 
-        // 🛠️ 派對帽微調參數：已恢復為改過一次的版本，並依要求將 Y 軸再往下移一些 (HAT_OFFSET_Y 改為 26)
+        // 派對帽微調參數：已恢復為改過一次的版本（往左及往下一點，往左大於往下）
         const HAT_OFFSET_X = -18;   // 派對帽左右偏移（正數往右，負數往左）
         const HAT_OFFSET_Y = 26;    // 派對帽上下偏移（正數往下壓，負數往上飄）
         // ==========================================
@@ -254,8 +304,10 @@
         let feverTimeLeft = 0;
         let hasSpawnedCake = false; 
         
-        // 雲朵資料
+        // 雲朵與操作引導變數
         let clouds = [];
+        let hasInteracted = false;     // 是否已經開始移動 (開始後會淡出指引)
+        let swipeGuideAlpha = 1.0;     // 引導線透明度
 
         let isDragging = false;
         let lastTouchX = 0;
@@ -284,7 +336,7 @@
             // 3. 🎂 生日狂熱模式主旋律：歡樂喜慶的 8-bit 生日歌快切變奏旋律 (方波)
             feverMelody: [
                 523.25, 523.25, 587.33, 523.25, 698.46, 659.25, 0, 0, // C5 C5 D5 C5 F5 E5
-                523.25, 523.25, 587.33, 523.25, 783.99, 698.46, 0, 0  // C5 C5 D5 C5 G5 F5
+                523.25, 523.25, 587.33, 523.25, 698.46, 659.25, 0, 0  // C5 C5 D5 C5 G5 F5
             ],
 
             init() {
@@ -297,19 +349,8 @@
                 }
             },
 
-            // 產生白噪音緩衝（用於架子鼓與敲擊樂音效）
             createNoiseBuffer() {
-                if (!this.ctx) return null;
-                const bufferSize = this.ctx.sampleRate * 0.4;
-                const buffer = this.ctx.createBuffer(1, bufferWidth = bufferSize, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = Math.random() * 2 - 1;
-                }
-                return buffer;
-            },
-
-            createNoiseBuffer() {
+                if (!this.ctx) return;
                 const bufferSize = this.ctx.sampleRate * 0.15;
                 const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const data = buffer.getChannelData(0);
@@ -453,9 +494,7 @@
                     const speedFactor = isFeverMode ? 1.4 : 1.0;
                     const stepDur = (180 / speedFactor); // 基本每步的時間間隔 (ms)
 
-                    // ----------------------------------------------------
-                    // 1. 【啟程層次】：播放旋律軌 (Melody Track) - 任何分數皆播放
-                    // ----------------------------------------------------
+                    // 1. 【啟程層次】：旋律軌 (Melody Track) - 任何分數皆播放
                     const currentMelody = isFeverMode ? this.feverMelody : this.melody;
                     const melNote = currentMelody[this.step % currentMelody.length];
                     if (melNote > 0) {
@@ -464,30 +503,23 @@
                         this.playTone(melNote, waveType, (stepDur / 1000) * 1.5, vol);
                     }
 
-                    // ----------------------------------------------------
-                    // 2. 【進化層次：SCORE >= 100 或狂熱】：播放低音軌 (Bass Track)
-                    // ----------------------------------------------------
+                    // 2. 【進化層次：SCORE >= 100】：低音軌 (Bass Track)
                     if (score >= 100 || isFeverMode) {
-                        // 算出當前處於 16 步和弦進行中的哪一個和弦 (每 4 步換一個和弦根音)
                         const chordIndex = Math.floor((this.step % 16) / 4);
                         const rootFreq = this.roots[chordIndex];
-                        
-                        // 低音律動：在步數的第 0, 2 步上播放
                         if (this.step % 2 === 0) {
                             const bassVol = isFeverMode ? 0.04 : 0.055;
                             this.playTone(rootFreq, 'sine', (stepDur / 1000) * 1.8, bassVol);
                         }
                     }
 
-                    // ----------------------------------------------------
-                    // 3. 【極致進化層次：SCORE >= 200 或狂熱】：播放節奏鼓點軌 (Drums Track)
-                    // ----------------------------------------------------
+                    // 3. 【極致進化層次：SCORE >= 200】：節奏鼓點軌 (Drums Track)
                     if (score >= 200 || isFeverMode) {
                         const beatIndex = this.step % 4;
                         if (beatIndex === 0) {
-                            this.playKick(); // 每拍第一拍：大鼓
+                            this.playKick(); 
                         } else if (beatIndex === 2) {
-                            this.playSnare(); // 每拍第三拍：小鼓
+                            this.playSnare(); 
                         }
                     }
 
@@ -528,8 +560,9 @@
         homeBtn.addEventListener('click', backToHome);
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; }   
-            if (e.key === 'ArrowRight') { moveDirection = 1; player.facing = 'right'; } 
+            if (!gameActive) return;
+            if (e.key === 'ArrowLeft') { moveDirection = -1; player.facing = 'left'; hasInteracted = true; }   
+            if (e.key === 'ArrowRight') { moveDirection = 1; player.facing = 'right'; hasInteracted = true; } 
         });
         window.addEventListener('keyup', (e) => {
             if ((e.key === 'ArrowLeft' && moveDirection === -1) || (e.key === 'ArrowRight' && moveDirection === 1)) moveDirection = 0;
@@ -539,6 +572,7 @@
             if (!gameActive) return;
             e.preventDefault();
             isDragging = true;
+            hasInteracted = true; // 觸發滑動，淡出操作引導
             const rect = canvas.getBoundingClientRect();
             lastTouchX = ((e.touches[0].clientX - rect.left) / rect.width) * GAME_WIDTH;
         });
@@ -583,6 +617,10 @@
             feverText.style.display = 'none';
             gameWrapper.classList.remove('fever-active');
 
+            // 🛠️ 重置操控引導機制
+            hasInteracted = false;
+            swipeGuideAlpha = 1.0;
+
             // 初始化背景中緩緩移動的半透明白雲 (限定在螢幕頂部 1/3)
             clouds = [
                 { x: 30, y: 50, scale: 0.9, speed: 0.12, opacity: 0.42 },
@@ -593,6 +631,7 @@
             scoreText.innerText = score;
             hpBar.style.width = '100%';
             hpText.innerText = '100 / 100'; 
+            hpContainerWrapper.classList.remove('danger-hp'); // 確保一開始不閃爍
             
             startScreen.classList.add('hide');
             rulesScreen.classList.add('hide');
@@ -616,6 +655,13 @@
                 if (hp <= 0) { hp = 0; endGame(false); }
                 hpBar.style.width = `${hp}%`;
                 hpText.innerText = `${hp} / 100`; 
+
+                // 🛠️ 體力低於 30% 時，HUD 的 ENERGY 發出紅色閃爍與抖動反饋
+                if (hp <= 30) {
+                    hpContainerWrapper.classList.add('danger-hp');
+                } else {
+                    hpContainerWrapper.classList.remove('danger-hp');
+                }
             }, 1000);
         }
 
@@ -638,6 +684,7 @@
             scoreText.innerText = score;
             hpBar.style.width = '100%';
             hpText.innerText = '100 / 100';
+            hpContainerWrapper.classList.remove('danger-hp');
 
             drawGame();
             endScreen.classList.add('hide');
@@ -732,8 +779,16 @@
         function updateGame() {
             if (!gameActive) return;
 
-            if (moveDirection === -1 && player.x > player.width / 2) player.x -= player.speed;
+            if (moveDirection === -1 && player.x > player.width / 2) {
+                player.x -= player.speed;
+                lastTouchX = player.x; // 確保鍵盤與滑鼠拖曳訊號流暢同步
+            }
             if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
+
+            // 🛠️ 操控引導虛線箭頭淡出邏輯
+            if (isDragging || moveDirection !== 0) {
+                isDragging = true; // 觸發過任何滑動，就把狀態設定為 true 隱藏引導線
+            }
 
             // 更新雲朵緩緩飄移邏輯 (橫跨螢幕後重置並於頂部 1/3 隨機 y 軸再現)
             for (let i = 0; i < clouds.length; i++) {
@@ -806,7 +861,7 @@
             gameLoopId = requestAnimationFrame(updateGame);
         }
 
-        // 繪製圓角輔助路徑函數（此為手繪生日蛋糕所必需，絕不可刪除！）
+        // 繪製圓角輔助路徑函數
         function pathRoundRect(ctx, x, y, width, height, radius) {
             ctx.beginPath();
             ctx.moveTo(x + radius, y);
@@ -894,10 +949,60 @@
             ctx.restore();
         }
 
+        // 🛠️ 繪製左右拖曳手繪風操作指引線
+        function drawSwipeGuide() {
+            if (isDragging || !gameActive) return; // 只要一開始滑動、或不在遊戲中，就完全不繪製
+
+            ctx.save();
+            ctx.globalAlpha = swipeGuideAlpha;
+            ctx.strokeStyle = '#3c6382';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]); // 繪製虛線
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#3c6382';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const lineY = GAME_HEIGHT - 120; // 剛好對齊玩家人物腰部
+
+            // 左箭頭虛線
+            ctx.beginPath();
+            ctx.moveTo(player.x - 35, lineY);
+            ctx.lineTo(player.x - 110, lineY);
+            ctx.stroke();
+
+            // 左箭頭尖端
+            ctx.beginPath();
+            ctx.moveTo(player.x - 110, lineY);
+            ctx.lineTo(player.x - 102, lineY - 6);
+            ctx.moveTo(player.x - 110, lineY);
+            ctx.lineTo(player.x - 102, lineY + 6);
+            ctx.stroke();
+
+            // 右箭頭虛線
+            ctx.beginPath();
+            ctx.moveTo(player.x + 35, lineY);
+            ctx.lineTo(player.x + 110, lineY);
+            ctx.stroke();
+
+            // 右箭頭尖端
+            ctx.beginPath();
+            ctx.moveTo(player.x + 110, lineY);
+            ctx.lineTo(player.x + 102, lineY - 6);
+            ctx.moveTo(player.x + 110, lineY);
+            ctx.lineTo(player.x + 102, lineY + 6);
+            ctx.stroke();
+
+            // 手勢指引文字
+            ctx.fillText('← 左右滑動控制 →', player.x, lineY - 20);
+
+            ctx.restore();
+        }
+
         function drawGame() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // A. 清晨藍天白雲漸層背景
+            // A. 改回清晨粉藍色的美麗天空漸層背景（僅保留溫和明亮的純藍天漸層）
             const skyGrad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
             skyGrad.addColorStop(0, '#81d4ff');   // 柔和天藍
             skyGrad.addColorStop(0.7, '#bfe9ff'); // 淺水藍
@@ -905,7 +1010,7 @@
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // B. 繪製背景頂部 1/3 的慢速移動半透明白雲
+            // B. 繪製背景頂部 1/3 的慢速移動半透明白雲 (真實天空感)
             ctx.save();
             for (const c of clouds) {
                 ctx.globalAlpha = c.opacity;
@@ -915,6 +1020,7 @@
                 const cy = c.y;
                 const r = 16 * c.scale;
                 
+                // 向量曲線繪製蓬鬆手繪風雲朵
                 ctx.beginPath();
                 ctx.arc(cx, cy, r, 0, Math.PI * 2);
                 ctx.arc(cx + r * 0.8, cy - r * 0.4, r * 0.8, 0, Math.PI * 2);
@@ -935,6 +1041,9 @@
             }
 
             // D. 舞台所有元素已乾淨移除
+
+            // 🛠️ 繪製新手滑動引導
+            drawSwipeGuide();
 
             // 4. 繪製主角（含派對帽、朝向翻轉邏輯）
             if (imgStatus.player) {
@@ -970,6 +1079,8 @@
 
             // 5. 繪製掉落食物與地雷
             for (const item of items) {
+                // 護膝主體在藍天背景下已顯眼，移除紅色亮光效果
+
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
