@@ -54,8 +54,26 @@
             align-items: center; 
         }
         
-        #fever-text { color: #ff3f34; font-weight: 900; background: rgba(255, 224, 102, 0.9); padding: 4px 10px; border-radius: 5px; box-shadow: 0 0 8px #ffe066; display: none; font-size: 13px; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        /* 🛠️ 生日模式定位優化：使用絕對定位懸浮於 HUD 下方，絕不推擠左右版面 */
+        #fever-text { 
+            position: absolute;
+            top: 38px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff3f34; 
+            font-weight: 900; 
+            background: rgba(255, 224, 102, 0.95); 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            box-shadow: 0 3px 10px rgba(255, 190, 0, 0.4); 
+            display: none; 
+            font-size: 13px; 
+            animation: blink 1s infinite; 
+            z-index: 15;
+            white-space: nowrap;
+            border: 1px solid #ffbe00;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
         #hp-container-wrapper { display: flex; align-items: center; font-size: 14px; color: #2c3e50; transition: color 0.2s; }
         #hp-bar-container { position: relative; width: 95px; height: 22px; background: rgba(0, 0, 0, 0.15); border-radius: 11px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 4px; border: 1.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -84,7 +102,7 @@
         
         #hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 11px; line-height: 19px; color: #fff; font-weight: 900; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); z-index: 12; }
         
-        /* 🛠️ HUD 靜音按鈕美化成像素立體風 */
+        /* HUD 靜音按鈕美化成像素立體風 */
         #mute-btn {
             background: #fff;
             border: 1px solid #ccc;
@@ -102,7 +120,7 @@
             box-shadow: 0 0px 0 #bbb;
         }
 
-        /* 🛠️ 日系精緻乳白毛玻璃面板 */
+        /* 日系精緻乳白毛玻璃面板 */
         .screen { 
             position: absolute; 
             top: 0; 
@@ -156,22 +174,22 @@
     <div id="game-wrapper">
         <div id="hud">
             <div>SCORE: <span id="score-text">0</span>/718</div>
+            <!-- 🎂 生日模式提示框（已移出 Flex 佈局影響範疇，改為絕對居中定位懸浮） -->
             <div id="fever-text">🎂 生日模式 5s</div>
-            <!-- 🛠️ HP 區域包裹層，便於觸發紅色危急警告閃爍與抖動 -->
+            <!-- HP 區域包裹層，便於觸發紅色危急警告閃爍與抖動 -->
             <div id="hp-container-wrapper">
                 ❤️ ENERGY: 
                 <div id="hp-bar-container">
                     <div id="hp-bar"></div>
                     <div id="hp-text">100/100</div>
                 </div>
-                <!-- 🔇 靜音按鈕美化排在 HUD 最右側 -->
+                <!-- 靜音按鈕美化排在 HUD 最右側 -->
                 <button id="mute-btn">🔊</button>
             </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
-        <!-- 🛠️ 所有面板皆換上優雅細緻的乳白毛玻璃色調與日系深藍文字 -->
         <div id="start-screen" class="screen">
             <h1>糊塗麵大作戰 ⚔️</h1>
             <p>
@@ -617,7 +635,7 @@
             feverText.style.display = 'none';
             gameWrapper.classList.remove('fever-active');
 
-            // 🛠️ 重置操控引導機制
+            // 重置操控引導機制
             hasInteracted = false;
             swipeGuideAlpha = 1.0;
 
@@ -656,7 +674,7 @@
                 hpBar.style.width = `${hp}%`;
                 hpText.innerText = `${hp} / 100`; 
 
-                // 🛠️ 體力低於 30% 時，HUD 的 ENERGY 發出紅色閃爍與抖動反饋
+                // 體力低於 30% 時，HUD 的 ENERGY 發出紅色閃爍與抖動反饋
                 if (hp <= 30) {
                     hpContainerWrapper.classList.add('danger-hp');
                 } else {
@@ -785,9 +803,10 @@
             }
             if (moveDirection === 1 && player.x < GAME_WIDTH - player.width / 2) player.x += player.speed;
 
-            // 🛠️ 操控引導虛線箭頭淡出邏輯
-            if (isDragging || moveDirection !== 0) {
-                isDragging = true; // 觸發過任何滑動，就把狀態設定為 true 隱藏引導線
+            // 操控引導虛線箭頭漸隱邏輯
+            if (hasInteracted && swipeGuideAlpha > 0) {
+                swipeGuideAlpha -= 0.05;
+                if (swipeGuideAlpha < 0) swipeGuideAlpha = 0;
             }
 
             // 更新雲朵緩緩飄移邏輯 (橫跨螢幕後重置並於頂部 1/3 隨機 y 軸再現)
@@ -951,7 +970,7 @@
 
         // 🛠️ 繪製左右拖曳手繪風操作指引線
         function drawSwipeGuide() {
-            if (isDragging || !gameActive) return; // 只要一開始滑動、或不在遊戲中，就完全不繪製
+            if (swipeGuideAlpha <= 0 || !gameActive) return; // 已滑動、或不在遊戲中，就完全不繪製
 
             ctx.save();
             ctx.globalAlpha = swipeGuideAlpha;
@@ -1079,8 +1098,6 @@
 
             // 5. 繪製掉落食物與地雷
             for (const item of items) {
-                // 護膝主體在藍天背景下已顯眼，移除紅色亮光效果
-
                 if (item.isLoaded) {
                     ctx.drawImage(item.img, item.x - item.width / 2, item.y - item.height / 2, item.width, item.height);
                 } else {
