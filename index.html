@@ -414,7 +414,7 @@
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(180, startTime + this.ctx.currentTime);
                 oscGain.gain.setValueAtTime(0.07, startTime + this.ctx.currentTime);
-                oscGain.gain.exponentialRampToValueAtTime(0.001, startTime + this.ctx.currentTime + 0.1;
+                oscGain.gain.exponentialRampToValueAtTime(0.001, startTime + this.ctx.currentTime + 0.1); // 🛠️ 成功修復此處少寫右括號 ) 的編譯錯誤！
                 osc.connect(oscGain);
                 oscGain.connect(this.ctx.destination);
                 
