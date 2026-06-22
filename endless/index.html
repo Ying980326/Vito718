@@ -156,7 +156,6 @@
         #home-btn { background: #e056fd; box-shadow: 0 5px 20px rgba(224, 86, 253, 0.4); }
         #home-btn:active { background: #be2edd; transform: translateY(2px); }
         
-        /* 🛠️ 新增回到劇情版按鈕 */
         #story-home-btn { background: #00a8ff; box-shadow: 0 5px 20px rgba(0, 168, 255, 0.4); }
         #story-home-btn:active { background: #0097e6; transform: translateY(2px); }
         
@@ -170,7 +169,6 @@
 
     <div id="game-wrapper">
         <div id="hud">
-            <!-- 🛠️ 顯示目前最好分數與目前得分 -->
             <div>SCORE: <span id="score-text">0</span> | BEST: <span id="best-text" style="color: #ff9f43;">0</span></div>
             <div id="fever-text">🎂 生日模式 5s</div>
             <div id="hp-container-wrapper">
@@ -189,12 +187,11 @@
             <h1>無盡挑戰模式 ⚔️</h1>
             <p>
                 <b>生存時間越久，體力扣得越快！</b><br>
-                每增加 <b>250分</b> 將循環掉落蛋糕延續壽命 🎂<br>
+                後期蛋糕 <b>取得門檻會越來越高</b>！ 🎂<br>
                 刷新你的最佳紀錄吧！✨
             </p>
             <div class="btn-group">
                 <button id="start-btn">開始挑戰</button>
-                <!-- 🛠️ 串聯回到劇情版的按鈕 -->
                 <button id="story-home-btn">🏠 回到劇情版</button>
             </div>
         </div>
@@ -205,7 +202,7 @@
                 <div class="rule-item">🍜 糊塗麵：+10分 | 🍖 炸排骨：+17分</div>
                 <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
                 <div class="rule-item" style="color: #ff9f43; font-weight: bold;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
-                <div class="rule-item" style="color: #ff4d4d; font-weight: bold;">⚠️ 警報：生存時間每過 20 秒，體力流失加劇！</div>
+                <div class="rule-item" style="color: #ff4d4d; font-weight: bold;">⚠️ 警報：時間越久，體力流失、蛋糕間距大幅劇增！</div>
                 <hr style="border: 0; border-top: 1px dashed rgba(0, 86, 145, 0.2); margin: 10px 0;">
                 <div class="rule-target">🏆 目標：突破體力極限，刷新最高分！</div>
                 
@@ -224,7 +221,6 @@
             <p id="end-msg"></p>
             <div class="btn-group">
                 <button id="restart-btn">再玩一次</button>
-                <!-- 🛠️ 結算畫面回到劇情版按鈕 -->
                 <button id="back-to-story-btn">🏠 回到劇情版</button>
                 <button id="home-btn">回到首頁</button>
             </div>
@@ -314,10 +310,11 @@
         let gameLoopId, spawnLoopId, timeBurnLoopId, feverTimerId; 
         let items = [];
 
-        // 🛠️ 無盡版漸進式流失與難度加速變數
-        let survivalTime = 0; // 生存秒數
-        let speedMultiplier = 1.0; // 動態速度係數
-        let cakeMilestone = 250; // 下一次蛋糕掉落的分數線
+        // 🛠️ 無盡版遞增難度核心變數
+        let survivalTime = 0; 
+        let speedMultiplier = 1.0; 
+        let cakeMilestone = 250;      // 當前要解鎖蛋糕的分數線
+        let cakeIncrement = 250;      // 里程碑遞增值 (每次生成蛋糕後，該值會變大)
         let bestScore = parseInt(localStorage.getItem('vito_best_score') || '0');
 
         let isFeverMode = false;
@@ -330,10 +327,8 @@
         let isDragging = false;
         let lastTouchX = 0;
 
-        // 初始化顯示歷史最高分
         bestText.innerText = bestScore;
 
-        // 🎵 Web Audio API 合成器
         const audioHelper = {
             ctx: null,
             muted: false,
@@ -557,7 +552,6 @@
         restartBtn.addEventListener('click', startGame); 
         homeBtn.addEventListener('click', backToHome);
 
-        // 🛠️ 回到劇情版網址導流事件
         storyHomeBtn.addEventListener('click', () => {
             window.location.href = '../';
         });
@@ -614,6 +608,7 @@
             survivalTime = 0;
             speedMultiplier = 1.0;
             cakeMilestone = 250; 
+            cakeIncrement = 250; // 重置初始里程碑增幅
             player.x = GAME_WIDTH / 2;
             player.facing = 'left'; 
             moveDirection = 0;
@@ -660,8 +655,8 @@
                 
                 survivalTime++;
 
-                // 🛠️ 無盡版核心：每過 20 秒，體力流失扣血增加！
-                let decayRate = 2; // 預設 1~20s 扣 2 HP
+                // 漸進式體力流失
+                let decayRate = 2; 
                 if (survivalTime > 20 && survivalTime <= 40) decayRate = 3.5;
                 else if (survivalTime > 40 && survivalTime <= 60) decayRate = 5;
                 else if (survivalTime > 60 && survivalTime <= 80) decayRate = 6.5;
@@ -679,7 +674,6 @@
                     hpContainerWrapper.classList.remove('danger-hp');
                 }
 
-                // 每過 30 秒，掉落速度稍微提升 15% 增加操作張力
                 if (survivalTime % 30 === 0) {
                     speedMultiplier += 0.15;
                 }
@@ -741,9 +735,11 @@
         function spawnItem() {
             if (!gameActive) return;
 
-            // 🛠️ 無盡挑戰模式：分數達到 milestone (250, 500, 750, 1000...) 循環生出續命生日蛋糕！
+            // 🛠️ 核心修改：遞增式里程碑。每次吃到蛋糕，下一個里程碑的「需求跨度」會增加 150 分！
+            // 解鎖路徑：250 -> 650 (+400) -> 1200 (+550) -> 1900 (+700)...
             if (score >= cakeMilestone) {
-                cakeMilestone += 250; // 更新下一個里程碑
+                cakeIncrement += 150; 
+                cakeMilestone += cakeIncrement; 
                 items.push({
                     typeIndex: 99, 
                     img: null,
@@ -1171,7 +1167,6 @@
             endTitle.innerText = "💀 挑戰結束";
             endTitle.style.color = "#ff4d4d";
 
-            // 🛠️ 無盡挑戰版專屬結算：檢查是否打破紀錄
             let breakRecordMsg = "";
             if (score > bestScore) {
                 bestScore = score;
