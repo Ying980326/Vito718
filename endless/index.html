@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>糊塗麵大作戰：無盡挑戰 ⚔️</title>
+    <title>糊塗麵大作戰：無盡模式 ⚔️</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: none; } 
         body { background: #E0F6FF; font-family: Arial, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -184,10 +184,9 @@
         <canvas id="gameCanvas"></canvas>
 
         <div id="start-screen" class="screen">
-            <h1>無盡挑戰模式 ⚔️</h1>
+            <h1>無盡模式 ⚔️</h1>
             <p>
                 <b>生存時間越久，體力扣得越快！</b><br>
-                後期蛋糕 <b>取得門檻會越來越高</b>！ 🎂<br>
                 刷新你的最佳紀錄吧！✨
             </p>
             <div class="btn-group">
@@ -197,14 +196,14 @@
         </div>
 
         <div id="rules-screen" class="screen hide">
-            <h1>無盡規則說明</h1>
+            <h1>無盡模式說明</h1>
             <div class="rule-list">
                 <div class="rule-item">🍜 糊塗麵：+10分 | 🍖 炸排骨：+17分</div>
                 <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
                 <div class="rule-item" style="color: #ff9f43; font-weight: bold;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
-                <div class="rule-item" style="color: #ff4d4d; font-weight: bold;">⚠️ 警報：時間越久，體力流失、蛋糕間距大幅劇增！</div>
+                <div class="rule-item" style="color: #ff4d4d; font-weight: bold;">⚠️ 注意：時間越久，體力流失越快！！</div>
                 <hr style="border: 0; border-top: 1px dashed rgba(0, 86, 145, 0.2); margin: 10px 0;">
-                <div class="rule-target">🏆 目標：突破體力極限，刷新最高分！</div>
+                <div class="rule-target">🏆 目標：挑戰極限，刷新最高分！</div>
                 
                 <div class="control-guide">
                     💻 電腦：使用鍵盤 ← → 方向鍵左右移動<br>
@@ -1176,7 +1175,8 @@
 
             endMsg.innerHTML = `在極限消耗下，你一共堅持了 <b>${survivalTime}</b> 秒！<br>
                                 最終挑戰得分：<b>${score}</b> 分！${breakRecordMsg}<br>
-                                🏆 歷史最高分：<b>${bestScore}</b> 分。`;
+                                🏆 歷史最高分：<b>${bestScore}</b> 分。<br>
+                                別忘記截圖參加排名賽噢！`;
             
             endScreen.classList.remove('hide');
         }
