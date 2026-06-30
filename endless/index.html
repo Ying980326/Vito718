@@ -50,12 +50,13 @@
             text-shadow: 1px 1px 1px #fff; 
             display: flex; 
             justify-content: space-between; 
-            align-items: center; 
+            align-items: flex-start; /* 配合左側兩行，對齊頂部 */
         }
         
+        /* 🛠️ 生日懸浮框稍微往下挪一點點，版面更完美平衡 */
         #fever-text { 
             position: absolute;
-            top: 48px;
+            top: 56px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 15;
@@ -169,7 +170,11 @@
 
     <div id="game-wrapper">
         <div id="hud">
-            <div>SCORE: <span id="score-text">0</span> | BEST: <span id="best-text" style="color: #ff9f43;">0</span></div>
+            <!-- 🛠️ 核心修改：左側分數改為垂直排列（SCORE 在上，BEST 在下），橫向不佔空間，100% 避開體力條！ -->
+            <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25;">
+                <div>SCORE: <span id="score-text">0</span></div>
+                <div style="font-size: 13px; color: #ff9f43; margin-top: 3px; text-shadow: 1px 1px 1px rgba(0,0,0,0.15);">🏆 BEST: <span id="best-text">0</span></div>
+            </div>
             <div id="fever-text">🎂 生日模式 5s</div>
             <div id="hp-container-wrapper">
                 ❤️ ENERGY: 
@@ -184,7 +189,7 @@
         <canvas id="gameCanvas"></canvas>
 
         <div id="start-screen" class="screen">
-            <h1>無盡模式 ⚔️</h1>
+            <h1>無盡挑戰模式 ⚔️</h1>
             <p>
                 <b>生存時間越久，體力扣得越快！</b><br>
                 刷新你的最佳紀錄吧！✨
@@ -201,9 +206,9 @@
                 <div class="rule-item">🍜 糊塗麵：+10分 | 🍖 炸排骨：+17分</div>
                 <div class="rule-item">🦵 護膝：-30分｜-20 ENERGY</div>
                 <div class="rule-item" style="color: #ff9f43; font-weight: bold;">🎂 吃到蛋糕將開啟 5 秒生日雙倍模式！</div>
-                <div class="rule-item" style="color: #ff4d4d; font-weight: bold;">⚠️ 注意：時間越久，體力流失越快！！</div>
+                <div class="rule-item" style="color: #ff4d4d; font-weight: bold;">⚠️ 注意：遊戲時間越久，體力流失越快！</div>
                 <hr style="border: 0; border-top: 1px dashed rgba(0, 86, 145, 0.2); margin: 10px 0;">
-                <div class="rule-target">🏆 目標：挑戰極限，刷新最高分！</div>
+                <div class="rule-target">🏆 目標：突破極限，刷新最高分！</div>
                 
                 <div class="control-guide">
                     💻 電腦：使用鍵盤 ← → 方向鍵左右移動<br>
@@ -309,7 +314,7 @@
         let gameLoopId, spawnLoopId, timeBurnLoopId, feverTimerId; 
         let items = [];
 
-        // 🛠️ 無盡版遞增難度核心變數
+        // 無盡版遞增難度核心變數
         let survivalTime = 0; 
         let speedMultiplier = 1.0; 
         let cakeMilestone = 250;      // 當前要解鎖蛋糕的分數線
@@ -607,7 +612,7 @@
             survivalTime = 0;
             speedMultiplier = 1.0;
             cakeMilestone = 250; 
-            cakeIncrement = 250; // 重置初始里程碑增幅
+            cakeIncrement = 250; 
             player.x = GAME_WIDTH / 2;
             player.facing = 'left'; 
             moveDirection = 0;
@@ -734,7 +739,7 @@
         function spawnItem() {
             if (!gameActive) return;
 
-            // 🛠️ 核心修改：遞增式里程碑。每次吃到蛋糕，下一個里程碑的「需求跨度」會增加 150 分！
+            // 遞增式里程碑。每次吃到蛋糕，下一個里程碑的「需求跨度」會增加 150 分！
             // 解鎖路徑：250 -> 650 (+400) -> 1200 (+550) -> 1900 (+700)...
             if (score >= cakeMilestone) {
                 cakeIncrement += 150; 
@@ -1176,7 +1181,7 @@
             endMsg.innerHTML = `在極限消耗下，你一共堅持了 <b>${survivalTime}</b> 秒！<br>
                                 最終挑戰得分：<b>${score}</b> 分！${breakRecordMsg}<br>
                                 🏆 歷史最高分：<b>${bestScore}</b> 分。<br>
-                                別忘記截圖參加排名賽噢！`;
+                                記得截圖參加排名賽噢！`;
             
             endScreen.classList.remove('hide');
         }
